@@ -80,8 +80,9 @@ uv pip install pillow
 | 道具／選單等 UI（約 950 條） | ⬜ |
 | 魔物名（70） | ⬜ |
 
-人名以**古事記的漢字原形**為準（150 筆中 57 筆有典可考，其餘依音義組字，
-`glossary.tsv` 的 `source` 欄位有標注）。
+人名以**古事記的漢字原形**為準（150 筆中 57 筆有典可考，其餘依音義組字）。
+審閱用的拆分清單見 [`docs/glossary-review.md`](docs/glossary-review.md)，
+附每個組字名的依據。
 
 ## 目前抽出的文字
 
@@ -224,6 +225,7 @@ ffmpeg -y -i /tmp/k.avi -vf "fps=1" /tmp/frames/k%03d.png
 ## 文件
 
 - [`docs/formats.md`](docs/formats.md) — 檔案格式分析（含未解項）
+- [`docs/glossary-review.md`](docs/glossary-review.md) — 人名譯法審閱清單
 
 ## 致謝
 
