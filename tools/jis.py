@@ -33,6 +33,15 @@ NO_SUBSTITUTE = {
     '丟': '改用「捨」「棄」',
     '檔': '改用「記錄」以外的詞，如「玩家磁片」',
     '跑': '改用「奔」「走」',
+    # Chinese has no second-person pronoun in JIS X 0208 at all. Use the
+    # classical 汝 / 君 / 爾, or address the listener by title.
+    '您': '改用「汝」「君」或以稱謂代稱',
+    '辦': '改用「做」「處理」',
+    '趟': '改寫，如「一趟」->「一行」',
+    '倘': '改用「若」「如」',
+    '賴': '改用「信任」「倚靠」',
+    '幫': '改用「助」「相助」',
+    '嚐': '改用「嘗」',
     '夠': '改用「足」「足夠」改寫',
     '趕': '改用「急」「驅」',
     # Chinese sentence-final particles are almost all absent. 呀 and 嘛 are
