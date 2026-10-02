@@ -105,13 +105,45 @@ dosbox-x -conf tools/dosbox/kami.conf
 
 JIS X 0208 收的是日系字形，繁體常用字會有缺口。試譯時實際撞到的：
 
-| 想用 | 狀況 | 改用 |
+| 想用 | 改用 | 備註 |
 |---|---|---|
-| 產 | 不在 JIS X 0208 | 産 |
-| 查 | 不在 JIS X 0208 | 査（或換詞，如「探勘」） |
-| 丟 | 不在 JIS X 0208 | 捨（「捨棄道具」） |
+| 產 | 産 | 日系新字體 |
+| 查 | 査 | 日系新字體；或換詞（「探勘地形」） |
+| 錄 | 録 | 日系新字體 |
+| 丟 | 捨 | 「捨棄道具」 |
+| 檔 | — | 無對應字，必須換詞（「玩家磁片」而非「存檔磁片」） |
+| 嗎 | — | 無對應字，必須改句式（「是否確定？」而非「確定嗎？」） |
 
-`tools/patch.py check` 會把這類缺字全部列出來。
+`tools/patch.py check` 會把這類缺字全部列出來。先用它掃過整批譯文，
+再逐條換字或換詞，比一個個撞有效率。
+
+## 在模擬器上驗證
+
+```sh
+dosbox-x -conf tools/dosbox/kami.conf -nopromptfolder -fastlaunch \
+         -time-limit 130 -exit
+```
+
+設定檔裡的 `config -avistart` 會從 DOS 內開始錄影，存到 `build/captures/`。
+這是唯一不需要主機端螢幕錄製權限的擷取方式。`-time-limit` 強制結束時
+AVI 的 index 會壞掉，用 `-fflags +ignidx` remux 後再抽影格：
+
+```sh
+ffmpeg -y -fflags +ignidx -i build/captures/kami_000.avi -c copy /tmp/k.avi
+ffmpeg -y -i /tmp/k.avi -vf "fps=1/2" /tmp/frames/k%03d.png
+```
+
+`AUTOTYPE -w <秒> -p <秒> <按鍵>...` 可以在遊戲執行中送按鍵
+（`-w` 會延後開始，所以能跨過 `KAMI.COM` 的交接）。片頭可用 ESC 跳過。
+
+### 踩過的坑
+
+- **`dosv` 屬於 `[dosv]` 區段，不是 `[dos]`。** 寫錯位置不會報錯，
+  但遊戲會把對話框畫出來、裡面一個字都沒有，很容易誤判成字型缺失。
+- 直接跑 `MAIN.EXE` 只有黑畫面；要走 `KAMI.COM`（它會依序載入
+  `FMDRV.COM` → `OPEN.EXE` → `MAIN.EXE`）。
+
+## 文件
 
 ## 文件
 
