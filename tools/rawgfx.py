@@ -7,7 +7,7 @@ have to be supplied. Two bit layouts are supported:
   packed   - N bits per pixel, pixels stored consecutively (nibble pairs)
   rowplane - N separate 1bpp bit planes, one full row per plane
   chunky   - N bytes encode 8 pixels; byte k holds bit k of each pixel
-             (KOEI's "8 pixels in N bytes" layout)
+             (KOEI's "8 pixels in N bytes" layout, LSB plane first)
 """
 from __future__ import annotations
 
@@ -35,13 +35,17 @@ def decode_packed(data: bytes, bpp: int) -> list[int]:
 
 
 def decode_chunky(data: bytes, bpp: int) -> list[int]:
-    """Every `bpp` bytes hold 8 pixels; byte k supplies bit (bpp-1-k)."""
+    """Every `bpp` bytes hold 8 pixels; byte k supplies bit k.
+
+    The blitter at MAIN.EXE lin 0x1a4a writes byte 0 to VGA map mask 1,
+    byte 1 to mask 2, byte 2 to mask 4 -- so byte k is plane k, LSB first.
+    """
     out = []
     for base in range(0, len(data) - bpp + 1, bpp):
         for bit in range(7, -1, -1):
             v = 0
             for p in range(bpp):
-                v |= ((data[base + p] >> bit) & 1) << (bpp - 1 - p)
+                v |= ((data[base + p] >> bit) & 1) << p
             out.append(v)
     return out
 

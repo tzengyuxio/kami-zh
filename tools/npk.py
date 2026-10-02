@@ -46,10 +46,15 @@ class Chunk:
 
 
 def conv_palette(v: int) -> tuple[int, int, int]:
-    """16-bit GRB (4 bits per channel) -> 24-bit RGB."""
+    """16-bit 0x0RGB (4 bits per channel) -> 24-bit RGB.
+
+    Verified against the stock EGA table at MAIN.EXE 0x529c8: read as RGB
+    all 16 entries match the standard palette; read as GRB red and green
+    come out swapped.
+    """
     b = (v >> 0) & 0x0F
-    r = (v >> 4) & 0x0F
-    g = (v >> 8) & 0x0F
+    g = (v >> 4) & 0x0F
+    r = (v >> 8) & 0x0F
     return (r * 0x11, g * 0x11, b * 0x11)
 
 
