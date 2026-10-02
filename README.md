@@ -225,6 +225,7 @@ ffmpeg -y -i /tmp/k.avi -vf "fps=1" /tmp/frames/k%03d.png
 ## 文件
 
 - [`docs/formats.md`](docs/formats.md) — 檔案格式分析（含未解項）
+- [`docs/translation-style.md`](docs/translation-style.md) — 翻譯風格指南（語域、缺字處理、專有名詞表）
 - [`docs/glossary-review.md`](docs/glossary-review.md) — 人名譯法審閱清單
 
 ## 致謝

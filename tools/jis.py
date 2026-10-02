@@ -8,9 +8,11 @@ with the Japanese shinjitai form, which reads fine in Chinese; a handful have
 no substitute and need the sentence rewritten.
 
 Measured against 192 of the most common Chinese characters, 7 are missing --
-a 3% gap. The sore spot is sentence-final particles: 啊 喔 嗎 呢 吧 哪 are all
-absent and only 呀 and 嘛 survive, so dialogue has to carry its tone through
-word choice rather than particles.
+a 3% gap, but it is unevenly placed: literary vocabulary is well covered
+while colloquial Chinese is thin. Neither second-person pronoun (你 您)
+exists, and of the sentence-final particles only 呀 and 嘛 survive. The
+project answers this by pitching the whole translation a register higher --
+see docs/translation-style.md for the rules the advice below follows.
 """
 from __future__ import annotations
 
@@ -27,51 +29,46 @@ SUBSTITUTES = {
 
 # No JIS X 0208 form at all -- the sentence has to be reworded.
 NO_SUBSTITUTE = {
-    '你': '改用「汝」「君」或改寫句子',
+    '你': '改用「汝」「君」「爾」',
+    '您': '改用「汝」「君」，或以稱謂代稱',
     '她': '改用「他」或改寫句子',
-    '嗎': '改用「麼」或改成直述句',
-    '吧': '刪去或改寫語氣',
-    '丟': '改用「捨」「棄」',
-    '檔': '改用「記錄」以外的詞，如「玩家磁片」',
-    '跑': '改用「奔」「走」',
-    # Chinese has no second-person pronoun in JIS X 0208 at all. Use the
-    # classical 汝 / 君 / 爾, or address the listener by title.
-    '您': '改用「汝」「君」或以稱謂代稱',
-    '辦': '改用「做」「處理」',
-    '趟': '改寫，如「一趟」->「一行」',
-    '倘': '改用「若」「如」',
-    '賴': '改用「信任」「倚靠」',
-    '幫': '改用「助」「相助」',
-    '嚐': '改用「嘗」',
-    '睏': '改用「倦」「睡意」',
-    '嗯': '改用「唔」',
-    '另': '改用「別」「再」',
-    '炫': '改用「誇」「誇耀」',
-    # Colloquial Chinese is the weak spot: JIS X 0208 is built for Japanese,
-    # so vernacular characters are thin while literary vocabulary is fine.
-    '傢': '改用「此人」「這廝」「小子」',
-    '伙': '改用「此人」「這廝」「小子」',
-    '喂': '改用「嘿」以外的呼喚詞，或刪去',
-    '哼': '改用「唔」或刪去',
-    '尷': '改用「難堪」',
-    '尬': '改用「難堪」',
-    '划': '改用「值得」(値)',
-    '偷': '改用「竊」',
-    '爹': '改用「父親」「老頭」',
-    '懂': '改用「明白」「曉得」',
-    '撿': '改用「拾」',
-    '擋': '改用「阻」「妨礙」',
-    '夠': '改用「足」「足夠」改寫',
-    '趕': '改用「急」「驅」',
-    # Chinese sentence-final particles are almost all absent. 呀 and 嘛 are
-    # the exceptions, so lean on those or drop the particle entirely.
-    '啊': '改用「呀」或刪去語氣詞',
-    '喔': '改用「呀」或刪去語氣詞',
-    '呢': '改成直述句或用「呀」',
-    '哪': '改寫；「哪裡」用「何處」',
+    '嗎': '短問句用「可否？」，長問句句尾「乎？」，詰問「邪？」',
+    '吧': '刪去，或改用文言助詞「也／矣／哉／夫／耳」',
+    '呢': '改成直述句，或用「也／耳」',
+    '啊': '改用「呀」或文言助詞',
+    '喔': '改用「呀」或文言助詞',
+    '哪': '「哪裡」用「何處」',
     '咦': '改用「呀」或刪去',
     '唷': '改用「呀」或刪去',
     '喲': '改用「呀」或刪去',
+    '唉': '改用「嗚呼」或刪去',
+    '哎': '改用「嗚呼」或刪去',
+    '嗯': '改用「唔」',
+    '哼': '改用「唔」或刪去',
+    '喂': '刪去，或改用「來」',
+    '傢': '改用「這廝」「此廝」；輕蔑用「竪子」，罵人用「匹夫」',
+    '伙': '改用「這廝」「此廝」；輕蔑用「竪子」，罵人用「匹夫」',
+    '爹': '改用「阿父」（不用「父親」，太正式）',
+    '幫': '改用「助」',
+    '夠': '改用「足」',
+    '懂': '改用「瞭」',
+    '偷': '改用「竊」「盜」',
+    '撿': '改用「拾」',
+    '跑': '改用「奔」「走」',
+    '辦': '改用「做」「處理」',
+    '擋': '改用「阻」「妨礙」',
+    '划': '改用「値」（不値得）',
+    '趕': '改用「急」「驅」「逐」',
+    '另': '改用「別」「再」「還有」',
+    '炫': '改用「誇」「誇耀」',
+    '尷': '改用「難堪」',
+    '尬': '改用「難堪」',
+    '睏': '改用「倦」',
+    '嚐': '改用「嘗」',
+    '賴': '改用「信任」「倚靠」',
+    '趟': '改寫，如「一趟」->「一行」',
+    '倘': '改用「若」「如」',
+    '檔': '換詞，如「玩家磁片」而非「存檔磁片」',
 }
 
 
