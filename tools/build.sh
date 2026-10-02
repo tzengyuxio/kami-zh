@@ -25,21 +25,26 @@ open('build/KAMI/KAMI.COM', 'wb').write(bytes(d))
 PY
 fi
 
-apply() {  # apply <tsv> <target-file> [xor]
-  local tsv=$1 target=$2 xor=${3:-0}
+# In-place string patches: these must fit the slot they overwrite.
+apply() {  # apply <tsv> <target-file>
+  local tsv=$1 target=$2
   local tmp; tmp=$(mktemp -t kami-patch)
   cp "build/KAMI/$target" "$tmp"
-  "$py" tools/patch.py apply --tsv "$tsv" --target "$tmp" \
-      --out "build/KAMI/$target" --xor "$xor"
+  "$py" tools/patch.py apply --tsv "$tsv" --target "$tmp" --out "build/KAMI/$target"
   rm "$tmp"
 }
 
 apply translation/trial_main_ui.tsv   MAIN.EXE
 apply translation/trial_startmenu.tsv MAIN.EXE
-apply translation/trial_event.tsv     EVENT.DAT 0x77
 
-for f in MAIN.EXE EVENT.DAT; do
-  a=$(stat -f%z "game/KAMI/$f"); b=$(stat -f%z "build/KAMI/$f")
-  [ "$a" = "$b" ] || { echo "$f 大小改變了: $a -> $b" >&2; exit 1; }
-done
-echo "build/ 已就緒，檔案大小與原版一致"
+# Story text: EVENT.DAT is rebuilt from scratch, so translations may be any
+# length. The block offsets this moves live in MAIN.EXE, which is why the
+# already-patched MAIN.EXE goes in and comes back out.
+"$py" tools/event.py --event game/KAMI/EVENT.DAT --main build/KAMI/MAIN.EXE \
+    apply --tsv translation/event.tsv \
+    --out-event build/KAMI/EVENT.DAT --out-main build/KAMI/MAIN.EXE
+
+# MAIN.EXE is patched in place and must keep its size; EVENT.DAT may not.
+a=$(stat -f%z game/KAMI/MAIN.EXE); b=$(stat -f%z build/KAMI/MAIN.EXE)
+[ "$a" = "$b" ] || { echo "MAIN.EXE 大小改變了: $a -> $b" >&2; exit 1; }
+echo "build/ 已就緒 (MAIN.EXE $b bytes, EVENT.DAT $(stat -f%z build/KAMI/EVENT.DAT) bytes)"

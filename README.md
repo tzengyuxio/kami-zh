@@ -37,6 +37,8 @@ uv pip install pillow
 | `tools/text.py` | 抽出可翻譯文字成 TSV（支援 XOR 解碼與區段限定） |
 | `tools/tables.py` | 匯出固定長度 record 的名稱表成 TSV |
 | `tools/patch.py` | 把譯文寫回遊戲檔（檢查 JIS 字庫與位元組上限） |
+| `tools/event.py` | 解析／重建 `EVENT.DAT`，支援**變長**譯文 |
+| `tools/jis.py` | 檢查用字是否在 JIS X 0208 內，並給替代建議 |
 | `tools/mousetsr.py` | 產生腳本化滑鼠的 DOS TSR，用來自動化選單操作 |
 
 範例：
@@ -98,9 +100,32 @@ mkdir -p build/KAMI && cp game/KAMI/* build/KAMI/
 dosbox-x -conf tools/dosbox/kami.conf
 ```
 
-字串是 NUL 結尾的，所以譯文可以短於原文；與原文等長時不補 NUL
-（原字串的結束符就在 `max_bytes` 之後）。**譯文不得超過 `max_bytes`** ——
-變長回寫要等 `EVENT.DAT` 的腳本結構解開後才能做。
+### 兩種回寫方式
+
+**就地覆蓋**（`tools/patch.py`）用於 `MAIN.EXE` 等執行檔內的字串。
+字串是 NUL 結尾的，譯文可以短於原文；與原文等長時不補 NUL。
+**譯文不得超過 `max_bytes`**。
+
+**整檔重建**（`tools/event.py`）用於 `EVENT.DAT` 的劇情文字。
+檔案會重新組裝，所以譯文長度不受原文限制：
+
+```sh
+# 匯出全部 2365 則訊息
+.venv/bin/python tools/event.py dump --out extracted/text/event_messages.tsv
+
+# 往返驗證（重建結果應與原檔位元組相同）
+.venv/bin/python tools/event.py check
+
+# 套用（同時改寫 EVENT.DAT 與 MAIN.EXE 裡的 block 索引）
+.venv/bin/python tools/event.py --main build/KAMI/MAIN.EXE \
+    apply --tsv translation/event.tsv \
+    --out-event build/KAMI/EVENT.DAT --out-main build/KAMI/MAIN.EXE
+```
+
+但**每則訊息仍有 70 bytes 的硬上限**（引擎固定緩衝區，含控制碼）。
+原文平均 53 bytes，所以中文通常還有餘裕；真的塞不下時用 `Cnnn`
+接續到下一則。翻譯時**必須原樣保留控制碼**（`G` 換行、`W` 等待、
+`U` 主角名、`Cnnn` 接續等，見 `docs/formats.md`）。
 
 ### 字庫限制實例
 
