@@ -163,6 +163,17 @@ DOS/V 系統字型，**任何 JIS X 0208 範圍內的字都能顯示**，中文�
 `INSTALL.SYS` 是安裝腳本（純文字，含 `\33C6` 之類的色彩控制碼）；
 `*.VER` 是磁片識別檔，含標題、版本與發行日。
 
+## 執行環境
+
+- `KAMI.COM` 是啟動器：載入 `FMDRV.COM`，安裝一個 INT 65h handler，
+  再依序執行 `OPEN.EXE` → `MAIN.EXE` → `END.EXE`。
+  `MAIN.EXE` 依賴那個 INT 65h handler，單獨執行只有黑畫面。
+- `MAIN.EXE` 參照的資料檔名寫在 `0x04f444` 起的字串表，其中
+  `A:ADISK.VER` 帶明確的磁碟機代號；`USERDISK.DIR` 與 `SAVEDATA.DAT`
+  是玩家磁片的識別檔與存檔。
+- 輸入同時走 INT 16h（鍵盤）與 INT 33h（滑鼠，只用 AX=0003h 取位置與
+  按鍵狀態）。選單以滑鼠為主：畫面上的橘色方框是游標，Enter 等同點擊。
+
 ## 未解項
 
 1. **`EVENT.DAT` 的事件腳本結構未解。** 文字已可讀，但包住文字的 bytecode

@@ -117,31 +117,41 @@ JIS X 0208 收的是日系字形，繁體常用字會有缺口。試譯時實際
 `tools/patch.py check` 會把這類缺字全部列出來。先用它掃過整批譯文，
 再逐條換字或換詞，比一個個撞有效率。
 
-## 在模擬器上驗證
+## 在模擬器上執行
 
 ```sh
-dosbox-x -conf tools/dosbox/kami.conf -nopromptfolder -fastlaunch \
-         -time-limit 130 -exit
+tools/build.sh            # 把 game/ 複製到 build/ 並套用全部譯文
+tools/dosbox/run.sh       # 開視窗遊玩（選單要用滑鼠點）
+tools/dosbox/run.sh 60    # 錄 60 秒到 build/captures/ 後自動結束
 ```
 
-設定檔裡的 `config -avistart` 會從 DOS 內開始錄影，存到 `build/captures/`。
-這是唯一不需要主機端螢幕錄製權限的擷取方式。`-time-limit` 強制結束時
-AVI 的 index 會壞掉，用 `-fflags +ignidx` remux 後再抽影格：
+錄影用的是 `config -avistart`，從 DOS 內啟動 —— 這是唯一不需要主機端
+螢幕錄製權限的擷取方式。`-time-limit` 強制結束會弄壞 AVI 的 index，
+用 `-fflags +ignidx` remux 後再抽影格：
 
 ```sh
 ffmpeg -y -fflags +ignidx -i build/captures/kami_000.avi -c copy /tmp/k.avi
-ffmpeg -y -i /tmp/k.avi -vf "fps=1/2" /tmp/frames/k%03d.png
+ffmpeg -y -i /tmp/k.avi -vf "fps=1" /tmp/frames/k%03d.png
 ```
-
-`AUTOTYPE -w <秒> -p <秒> <按鍵>...` 可以在遊戲執行中送按鍵
-（`-w` 會延後開始，所以能跨過 `KAMI.COM` 的交接）。片頭可用 ESC 跳過。
 
 ### 踩過的坑
 
 - **`dosv` 屬於 `[dosv]` 區段，不是 `[dos]`。** 寫錯位置不會報錯，
   但遊戲會把對話框畫出來、裡面一個字都沒有，很容易誤判成字型缺失。
-- 直接跑 `MAIN.EXE` 只有黑畫面；要走 `KAMI.COM`（它會依序載入
-  `FMDRV.COM` → `OPEN.EXE` → `MAIN.EXE`）。
+- **A: 必須是真正的軟碟映像（`imgmake`），掛載主機目錄不行。**
+  遊戲會檢查 BPB；給目錄的話它會停在只剩一個選項的選單，
+  按什麼都只有閃爍。A: 放 `BDISK.VER` 就能解鎖「開始新遊戲」。
+- `mount` 吃的是**主機路徑**；`imgmake` 的輸出要寫**純檔名**
+  （`imgmake da.img`），給 `c:\da.img` 會失敗。
+- 直接跑 `MAIN.EXE` 只有黑畫面 —— `KAMI.COM` 會安裝一個 INT 65h handler
+  給它用。`tools/build.sh` 改寫 `KAMI.COM` 裡的 `OPEN.EXE` 字串指向
+  `MAIN.EXE`，藉此跳過兩分鐘的片頭又保留 INT 65h（設 `SKIP_OPENING=0`
+  可關掉）。
+- **遊戲選單是滑鼠驅動的。** 畫面上那個橘色方框就是滑鼠游標，Enter 等同
+  「在游標位置點一下」，方向鍵完全無效。DOSBox-X 的 `AUTOTYPE` 只能送鍵盤，
+  mapper 也沒有滑鼠移動/點擊事件 —— 所以**滑鼠驅動的畫面無法自動化**，
+  要人工點。`AUTOTYPE -w <秒> -p <秒> <按鍵>...` 仍可用於送鍵盤
+  （`-w` 會延後開始，能跨過 `KAMI.COM` 的交接）。
 
 ## 文件
 
