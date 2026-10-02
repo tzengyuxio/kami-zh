@@ -1,0 +1,122 @@
+# 《神々の大地 ～古事記外伝～》檔案格式
+
+遊戲資訊：株式会社 光栄 (KOEI)，リコエイションゲーム第６弾，DOS/V 版，
+Version 1.0 Release 1，1993/07/27（出自 `KOJIKI.VER`）。
+
+本文件只記錄**已驗證**的格式。未驗證的推測放在「未解項」一節。
+
+## 1. NPK016 圖形容器
+
+`GRAPH.NPK`、`BIG.DAT`、`BIG_C.DAT`、`UNIT.DAT`、`UNIT_C.DAT`、
+`OPENGRP.DAT`、`ENDGRP.DAT` 都是同一種容器。
+
+### 外層：offset table
+
+```
+u32[n]   檔案內各 chunk 的起始位移；n = offsets[0] / 4
+```
+
+第一個 offset 同時就是表格自身的大小，所以筆數可由它推得。各 chunk 的大小
+等於下一個 offset 減去自己的 offset（最後一筆到檔尾）。
+
+### 內層：NPK016 chunk（14 bytes header）
+
+```
++0x00  char[6]  "NPK016"
++0x06  u16      bit planes，恆為 4（16 色）
++0x08  u16      圖寬（像素）
++0x0a  u16      圖高（像素）
++0x0c  u16      本 chunk 總長度，含這 14 bytes header
++0x0e  ...      壓縮資料流
+```
+
+驗證方式：`+0x0c` 的宣告長度與 offset table 推出的長度在**所有** chunk 上
+完全一致；解壓後的位元組數也剛好等於 `寬 × 高`，且輸入流用盡無剩餘。
+
+> 注意：kaodata 專案中《源平合戰》的 header 是 0x30 bytes 且含調色盤，
+> 本作不同——header 只有 0x0e bytes，**不含調色盤**。
+
+### 壓縮格式
+
+以 bit flag 驅動的 LZ 式 RLE，輸出為每像素 1 byte 的 16 色索引：
+
+- 每 8 個操作共用一個 flag byte，由低位元往高位元取用。
+- flag bit = 0 → **literal**：讀 2 bytes 產生 4 個像素。
+  `b1` 的高/低 nibble 供應 plane 3 / plane 2，`b2` 供應 plane 1 / plane 0。
+- flag bit = 1 → **back-reference**：讀 1 byte `b`，
+  複製 `((b & 0x1F) + 1) * 4` 個像素，
+  回溯距離為 `(((b & 0x60) >> 5) + 1) * 4`；
+  若 `b & 0x80` 則回溯距離改為 `(((b & 0x60) >> 5) + 1) * 圖寬`（往上數列）。
+
+實作見 `tools/npk.py` 的 `unpack()`，移植自
+[kaodata](https://github.com/tzengyuxio/kaodata) 的 `dekoei/utils.py`。
+
+回溯距離要用**圖寬**（非其他值）才正確：以「相鄰列相似度」對列寬做窮舉，
+`GRAPH.NPK`、`BIG.DAT`、`UNIT_C.DAT` 的最佳值都落在 header 宣告的圖寬上。
+
+### 各容器內容
+
+| 檔案 | chunks | 尺寸 | 內容 |
+|---|---:|---|---|
+| `GRAPH.NPK` | 13 | 640×400 ×4, 312×320, 416×96 ×5, 其他 | 主畫面外框、KOEI logo、版權畫面、場景背景 |
+| `OPENGRP.DAT` | 15 | 最大 640×320 | 片頭 |
+| `ENDGRP.DAT` | 12 | 最大 624×240 | 結局 |
+| `UNIT.DAT` | 47 | 160×128 | 戰鬥單位動畫 sprite sheet |
+| `UNIT_C.DAT` | 17 | 160×128 | 同上（另一組） |
+| `BIG.DAT` | 6 | 280×384 | 大型妖怪／怪物素材表 |
+| `BIG_C.DAT` | 2 | 280×384, 280×192 | 同上 |
+
+## 2. 調色盤
+
+16 色，每色 2 bytes，格式為 `0x0RGB`（R = bit 8-11，G = bit 4-7，B = bit 0-3，
+各 4 bits，乘 0x11 還原成 8 bit）。
+
+`MAIN.EXE` 偏移 `0x000529c8` 存著標準 EGA 16 色表：
+`000 00a 0a0 0aa a00 a0a aa0 aaa 777 00f 0f0 0ff f00 f0f ff0 fff`。
+
+各場景另有自訂調色盤（`MAIN.EXE` 的 `0x00034de2`、`0x00035408` 等處為候選），
+尚未對應到個別圖檔。
+
+## 3. 未壓縮圖形
+
+### `FACEGRP.DAT`（23,040 bytes）
+
+20 張 **48×64、3bpp（8 色）** 的 Q 版全身人物立繪。
+
+位元排列為 KOEI 的「8 pixels in N bytes」：每 3 個連續 bytes 編碼 8 個像素，
+第 k 個 byte 提供每個像素的第 `(bpp-1-k)` 個位元。每列 18 bytes，
+每張 1,152 bytes。
+
+見 `tools/rawgfx.py --layout chunky`。
+
+## 4. Shift-JIS 文字表
+
+### `RPDATA.CIM`（2,940 bytes）— 魔物表
+
+70 筆，每筆 42 bytes，名稱（Shift-JIS，null 結尾）在 record 開頭。
+例：漆黒の大蛇、血潮の百足、黄泉醜女、九尾狐、雷獣。
+
+### `SDATA.CIM`（40,889 bytes）— 人物表
+
+人物段從 `0x1372` 開始，155 筆，每筆 33 bytes，名稱在 record 開頭。
+例：オオナムヂ、タケヒラトリ、クマソタケル、コトシロヌシ。
+
+`0x1d1` 起另有一組疑似國名／地名的短表（ヤマシロ、サガラカ、ニイバリ、
+ヌマカワ），stride 尚未確定。
+
+### 其他 Shift-JIS
+
+`INSTALL.SYS` 是安裝腳本（純文字，含 `\33C6` 之類的色彩控制碼）；
+`*.VER` 是磁片識別檔，含標題、版本與發行日。
+
+## 未解項
+
+1. **對話／事件文字的儲存方式尚未找到。**
+   `EVENT.DAT`（145 KB）與 `MAIN.EXE` 以 Shift-JIS 掃描只掃得到雜訊級的誤判，
+   代表劇情文字不是直接以 Shift-JIS 明碼存放。可能是壓縮、或使用自訂字碼表。
+   `EVENT.DAT` 開頭 `16 00 26 00 2a 00 43 00 ...` 看似 u16 offset table。
+2. **`CHARA.DAT`（124,416 bytes）** 是 1bpp 資料（stride 2 bytes），
+   成對的圖與遮罩結構明顯，但正確寬度未定；不是字型。
+3. **`EFFECT.DAT`** autocorrelation 顯示 12 bytes/列、3bpp，推測寬 32 px，未驗證。
+4. `BIG.DAT` 的 280×384 素材表實際如何被組合成畫面，未解。
+5. 各圖檔對應的自訂調色盤位置未定。

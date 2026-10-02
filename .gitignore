@@ -1,0 +1,22 @@
+# Game binaries / assets — never commit (copyright)
+game/
+*.zip
+*.EXE
+*.COM
+*.DAT
+*.CIM
+*.NPK
+*.VER
+*.SYS
+
+# macOS
+.DS_Store
+__MACOSX/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Extracted game graphics are game assets — tools can regenerate them
+extracted/gfx/
