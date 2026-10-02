@@ -36,6 +36,7 @@ uv pip install pillow
 | `tools/sjis_scan.py` | 掃描檔案中的 Shift-JIS 字串 |
 | `tools/text.py` | 抽出可翻譯文字成 TSV（支援 XOR 解碼與區段限定） |
 | `tools/tables.py` | 匯出固定長度 record 的名稱表成 TSV |
+| `tools/patch.py` | 把譯文寫回遊戲檔（檢查 JIS 字庫與位元組上限） |
 
 範例：
 
@@ -76,6 +77,41 @@ uv pip install pillow
 
 每個 TSV 都有空的譯文欄位，以及 `max_bytes`（原字串的位元組長度）——
 就地覆寫時譯文不得超過這個長度。
+
+## 翻譯與回寫
+
+譯文放在 `translation/`，欄位與 `extracted/text/` 相同。回寫流程：
+
+```sh
+# 先檢查：譯文是否都在 JIS X 0208 內、是否超出位元組上限
+.venv/bin/python tools/patch.py check --tsv translation/trial_main_ui.tsv
+
+# 套用到 build/（絕不就地改 game/ 的原始檔）
+mkdir -p build/KAMI && cp game/KAMI/* build/KAMI/
+.venv/bin/python tools/patch.py apply --tsv translation/trial_main_ui.tsv \
+    --target game/KAMI/MAIN.EXE --out build/KAMI/MAIN.EXE
+.venv/bin/python tools/patch.py apply --tsv translation/trial_event.tsv \
+    --target game/KAMI/EVENT.DAT --out build/KAMI/EVENT.DAT --xor 0x77
+
+# 在 DOSBox-X 的 DOS/V 日文模式下執行
+dosbox-x -conf tools/dosbox/kami.conf
+```
+
+字串是 NUL 結尾的，所以譯文可以短於原文；與原文等長時不補 NUL
+（原字串的結束符就在 `max_bytes` 之後）。**譯文不得超過 `max_bytes`** ——
+變長回寫要等 `EVENT.DAT` 的腳本結構解開後才能做。
+
+### 字庫限制實例
+
+JIS X 0208 收的是日系字形，繁體常用字會有缺口。試譯時實際撞到的：
+
+| 想用 | 狀況 | 改用 |
+|---|---|---|
+| 產 | 不在 JIS X 0208 | 産 |
+| 查 | 不在 JIS X 0208 | 査（或換詞，如「探勘」） |
+| 丟 | 不在 JIS X 0208 | 捨（「捨棄道具」） |
+
+`tools/patch.py check` 會把這類缺字全部列出來。
 
 ## 文件
 

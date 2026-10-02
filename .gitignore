@@ -20,3 +20,6 @@ __pycache__/
 
 # Extracted game graphics are game assets — tools can regenerate them
 extracted/gfx/
+
+# Patched game build output
+build/
