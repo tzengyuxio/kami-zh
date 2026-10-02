@@ -37,6 +37,7 @@ uv pip install pillow
 | `tools/text.py` | 抽出可翻譯文字成 TSV（支援 XOR 解碼與區段限定） |
 | `tools/tables.py` | 匯出固定長度 record 的名稱表成 TSV |
 | `tools/patch.py` | 把譯文寫回遊戲檔（檢查 JIS 字庫與位元組上限） |
+| `tools/mousetsr.py` | 產生腳本化滑鼠的 DOS TSR，用來自動化選單操作 |
 
 範例：
 
@@ -121,9 +122,33 @@ JIS X 0208 收的是日系字形，繁體常用字會有缺口。試譯時實際
 
 ```sh
 tools/build.sh            # 把 game/ 複製到 build/ 並套用全部譯文
-tools/dosbox/run.sh       # 開視窗遊玩（選單要用滑鼠點）
+tools/dosbox/run.sh       # 開視窗遊玩
 tools/dosbox/run.sh 60    # 錄 60 秒到 build/captures/ 後自動結束
 ```
+
+### 腳本化滑鼠
+
+遊戲的選單是滑鼠驅動的，而 DOSBox-X 沒有注入滑鼠的管道。
+`tools/mousetsr.py` 產生一個 DOS TSR 來解決：
+
+```sh
+# 參數是 "秒,x,y,按鍵" 的序列；按鍵 bit 0 是左鍵
+.venv/bin/python tools/mousetsr.py build/FAKEMS.COM \
+    "3,146,96,0; 3.6,146,96,1; 5.2,146,96,0"
+tools/dosbox/run.sh 30
+```
+
+`run.sh` 偵測到 `build/FAKEMS.COM` 就會在遊戲前載入它。座標是遊戲的
+640×480 DOS/V 畫面。常用位置：開始選單「開始新遊戲」`(146,96)`、
+名字視窗「決定」`(383,356)`、確認框「はい」`(431,370)`、
+頂端指令列 y=52（移動 105 / 術 172 / 道具 225 / 情報 282 /
+調査 347 / 行動 412 / 隊列 477 / 機能 542）。
+
+TSR 的做法見該檔的 docstring。重點是**只偽造 INT 33h function 3 不夠** ——
+遊戲用 function 0Ch 註冊了事件回呼，游標只在回呼被呼叫時才更新。
+所以 TSR 同時掛 INT 1Ch，以 18.2Hz 主動呼叫遊戲的回呼，
+並且**要先用遊戲訂閱的遮罩過濾事件旗標**（這款只訂閱「移動」）——
+不過濾的話遊戲的狀態機會錯亂，點擊完全無效。
 
 錄影用的是 `config -avistart`，從 DOS 內啟動 —— 這是唯一不需要主機端
 螢幕錄製權限的擷取方式。`-time-limit` 強制結束會弄壞 AVI 的 index，
