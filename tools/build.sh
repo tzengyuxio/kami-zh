@@ -34,7 +34,7 @@ apply() {  # apply <tsv> <target-file>
   rm "$tmp"
 }
 
-apply translation/trial_main_ui.tsv   MAIN.EXE
+apply translation/main_ui.tsv         MAIN.EXE
 apply translation/trial_startmenu.tsv MAIN.EXE
 
 # Name tables: fixed-stride records, 14 bytes of name each.
