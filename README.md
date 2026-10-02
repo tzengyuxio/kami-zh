@@ -34,6 +34,7 @@ uv pip install pillow
 | `tools/gfx.py` | 把 NPK016 容器輸出成 PNG |
 | `tools/rawgfx.py` | 渲染未壓縮的 planar 圖形（`FACEGRP.DAT` 等） |
 | `tools/sjis_scan.py` | 掃描檔案中的 Shift-JIS 字串 |
+| `tools/text.py` | 抽出可翻譯文字成 TSV（支援 XOR 解碼與區段限定） |
 | `tools/tables.py` | 匯出固定長度 record 的名稱表成 TSV |
 
 範例：
@@ -49,10 +50,32 @@ uv pip install pillow
 .venv/bin/python tools/rawgfx.py game/KAMI/FACEGRP.DAT \
     --width 48 --height 64 --bpp 3 --layout chunky --out /tmp/faces.png
 
+# 劇情對話（EVENT.DAT 是 Shift-JIS XOR 0x77）
+.venv/bin/python tools/text.py game/KAMI/EVENT.DAT --xor 0x77 \
+    --out extracted/text/event_dialogue.tsv
+
+# UI 文字（明碼 Shift-JIS，限定字串表區段）
+.venv/bin/python tools/text.py game/KAMI/MAIN.EXE --start 0x40000 \
+    --out extracted/text/main_ui.tsv
+
 # 人物與魔物名稱表
 .venv/bin/python tools/tables.py game/KAMI/SDATA.CIM --table SDATA.CIM \
     --out extracted/text/characters.tsv
 ```
+
+## 目前抽出的文字
+
+| 檔案 | 筆數 | 內容 |
+|---|---:|---|
+| `extracted/text/event_dialogue.tsv` | 2,219 | 劇情對話（約 64,000 字） |
+| `extracted/text/main_ui.tsv` | 950 | 選單、道具名、季節事件文 |
+| `extracted/text/characters.tsv` | 155 | 人物名 |
+| `extracted/text/monsters.tsv` | 70 | 魔物名 |
+| `extracted/text/open_ui.tsv` | 28 | 片頭 |
+| `extracted/text/end_ui.tsv` | 24 | 結局 |
+
+每個 TSV 都有空的譯文欄位，以及 `max_bytes`（原字串的位元組長度）——
+就地覆寫時譯文不得超過這個長度。
 
 ## 文件
 

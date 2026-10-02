@@ -84,10 +84,15 @@ def main():
     ap.add_argument("--min-jp", type=float, default=0.0,
                     help="drop runs whose Japanese-character ratio is below this")
     ap.add_argument("--summary", action="store_true", help="one line per file")
+    ap.add_argument("--xor", type=lambda s: int(s, 0), default=0,
+                    help="XOR every byte with this key before scanning "
+                         "(EVENT.DAT is obfuscated with 0x77)")
     args = ap.parse_args()
 
     for path in args.files:
         data = open(path, "rb").read()
+        if args.xor:
+            data = bytes(b ^ args.xor for b in data)
         runs = [
             r for r in scan(data, args.min_chars)
             if japanese_ratio(r[2]) >= args.min_jp
