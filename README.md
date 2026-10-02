@@ -73,7 +73,7 @@ uv pip install pillow
 | 範圍 | 狀態 |
 |---|---|
 | 人物名 | ✅ 150 / 150 |
-| 劇情（`translation/event.tsv`） | 🔶 372 / 2365（blocks 0–4、32） |
+| 劇情（`translation/event.tsv`） | 🔶 639 / 2365（blocks 0–9、32） |
 | UI（`translation/main_ui.tsv`） | ✅ 918 / 950 條（全畫面：道具、村落指令、情報、戰鬥、部隊、商店、系統訊息） |
 | 開始選單／磁片提示 | ✅ 38 條 |
 | 魔物名（70） | ⬜ |
