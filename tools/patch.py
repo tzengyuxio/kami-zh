@@ -16,8 +16,10 @@ from __future__ import annotations
 import argparse
 import csv
 import os
-import shutil
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import jis
 
 
 def load(tsv: str) -> list[dict]:
@@ -28,12 +30,7 @@ def load(tsv: str) -> list[dict]:
 
 def encode(text: str) -> tuple[bytes | None, list[str]]:
     """Encode to Shift-JIS, reporting characters JIS X 0208 cannot represent."""
-    missing = []
-    for ch in text:
-        try:
-            ch.encode("cp932")
-        except UnicodeEncodeError:
-            missing.append(ch)
+    missing = jis.missing(text)
     if missing:
         return None, missing
     return text.encode("cp932"), []
@@ -45,8 +42,7 @@ def check(rows: list[dict]) -> list[str]:
         raw, missing = encode(r["translation_zh"])
         if missing:
             problems.append(
-                f"[{r['id']}] {r['translation_zh']!r}: "
-                f"不在 JIS X 0208 內的字: {' '.join(missing)}")
+                f"[{r['id']}] {r['translation_zh']!r}: " + jis.advise(missing))
             continue
         limit = int(r["max_bytes"])
         if len(raw) > limit:

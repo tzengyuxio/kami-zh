@@ -39,6 +39,7 @@ uv pip install pillow
 | `tools/patch.py` | 把譯文寫回遊戲檔（檢查 JIS 字庫與位元組上限） |
 | `tools/event.py` | 解析／重建 `EVENT.DAT`，支援**變長**譯文 |
 | `tools/jis.py` | 檢查用字是否在 JIS X 0208 內，並給替代建議 |
+| `tools/build.sh` | 一鍵把 `game/` 修補成 `build/` |
 | `tools/mousetsr.py` | 產生腳本化滑鼠的 DOS TSR，用來自動化選單操作 |
 
 範例：
@@ -66,6 +67,21 @@ uv pip install pillow
 .venv/bin/python tools/tables.py game/KAMI/SDATA.CIM --table SDATA.CIM \
     --out extracted/text/characters.tsv
 ```
+
+## 翻譯進度
+
+| 範圍 | 狀態 |
+|---|---|
+| 人物名（150） | ✅ 全部譯完（`translation/glossary.tsv`） |
+| 劇情 block 32（序章，30 則） | ✅ 譯完並實機驗證 |
+| 開始選單／磁片提示（38 條） | ✅ |
+| 遊戲指令選單（27 條） | ✅ |
+| 其餘 46 個劇情 block（約 2330 則） | ⬜ |
+| 道具／選單等 UI（約 950 條） | ⬜ |
+| 魔物名（70） | ⬜ |
+
+人名以**古事記的漢字原形**為準（150 筆中 57 筆有典可考，其餘依音義組字，
+`glossary.tsv` 的 `source` 欄位有標注）。
 
 ## 目前抽出的文字
 

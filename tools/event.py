@@ -111,6 +111,45 @@ def load(event_path: str, main_path: str):
     return event, main_exe, blocks, tail, starts, msg_tabs
 
 
+def markup(text: str) -> str:
+    """The ASCII in a message is all markup -- control codes like G/W/N/X/U/Y
+    and S, continuation jumps like C003 or C64, F-jumps, and %s specifiers.
+    Real text is fullwidth throughout, so the ASCII sequence must survive a
+    translation unchanged."""
+    return ''.join(ch for ch in text if ord(ch) < 128)
+
+
+def cmd_verify(args):
+    import csv
+    _, _, blocks, _, _, _ = load(args.event, args.main)
+    problems = n = 0
+    for row in csv.DictReader(open(args.tsv, encoding='utf-8'), delimiter='\t'):
+        zh = row.get('translation_zh', '').strip()
+        if not zh:
+            continue
+        n += 1
+        bi, i = int(row['block']), int(row['index'])
+        where = f'block {bi} 第 {i} 則'
+        original = blocks[bi].messages[i].decode('cp932')
+
+        bad = jis.missing(zh)
+        if bad:
+            print(f'  {where}: {jis.advise(bad)}')
+            problems += 1
+            continue
+        size = len(zh.encode('cp932'))
+        if size > MAX_MESSAGE:
+            print(f'  {where}: {size} bytes 超過上限 {MAX_MESSAGE}')
+            problems += 1
+        if markup(zh) != markup(original):
+            print(f'  {where}: 控制碼不符 '
+                  f'原文 {markup(original)!r} -> 譯文 {markup(zh)!r}')
+            problems += 1
+    print(f'{args.tsv}: {n} 筆譯文, {problems} 筆有問題')
+    if problems:
+        raise SystemExit(1)
+
+
 def cmd_check(args):
     event, _, blocks, tail, starts, msg_tabs = load(args.event, args.main)
     total = sum(len(b.messages) for b in blocks)
@@ -156,6 +195,9 @@ def cmd_apply(args):
             except UnicodeEncodeError:
                 raise SystemExit(
                     f'block {b.index} 第 {i} 則: ' + jis.advise(jis.missing(zh)))
+            if markup(zh) != markup(blocks[b.index].messages[i].decode('cp932')):
+                raise SystemExit(
+                    f'block {b.index} 第 {i} 則: 控制碼不符')
             if len(raw) > MAX_MESSAGE:
                 raise SystemExit(
                     f'block {b.index} 第 {i} 則: {len(raw)} bytes 超過每則上限 '
@@ -178,6 +220,8 @@ def main():
     ap.add_argument('--main', default='game/KAMI/MAIN.EXE')
     sub = ap.add_subparsers(dest='cmd', required=True)
     sub.add_parser('check').set_defaults(fn=cmd_check)
+    v = sub.add_parser('verify'); v.add_argument('--tsv', required=True)
+    v.set_defaults(fn=cmd_verify)
     d = sub.add_parser('dump'); d.add_argument('--out', required=True)
     d.set_defaults(fn=cmd_dump)
     a = sub.add_parser('apply')

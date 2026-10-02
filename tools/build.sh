@@ -37,6 +37,10 @@ apply() {  # apply <tsv> <target-file>
 apply translation/trial_main_ui.tsv   MAIN.EXE
 apply translation/trial_startmenu.tsv MAIN.EXE
 
+# Name tables: fixed-stride records, 14 bytes of name each.
+"$py" tools/tables.py game/KAMI/SDATA.CIM --table SDATA.CIM \
+    --glossary translation/glossary.tsv --out build/KAMI/SDATA.CIM
+
 # Story text: EVENT.DAT is rebuilt from scratch, so translations may be any
 # length. The block offsets this moves live in MAIN.EXE, which is why the
 # already-patched MAIN.EXE goes in and comes back out.
