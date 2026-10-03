@@ -336,7 +336,7 @@ NUL 補滿），第 9 byte 起是數值。這張表與 `MAIN.EXE 0x04be94` 那�
   `MAIN.EXE` 依賴那個 INT 65h handler，單獨執行只有黑畫面。
 - `MAIN.EXE` 參照的資料檔名寫在 `0x04f444` 起的字串表，其中
   `A:ADISK.VER` 帶明確的磁碟機代號；`USERDISK.DIR` 與 `SAVEDATA.DAT`
-  是玩家磁片的識別檔與存檔。
+  是記録磁片（存檔磁片）的識別檔與存檔。
 - 輸入同時走 INT 16h（鍵盤）與 INT 33h（滑鼠）。選單**以滑鼠為主**，
   方向鍵無效。滑鼠部分：`0x043ca` 以 function 0Ch 註冊事件回呼、
   遮罩 `CX=1`（只要移動事件），`0x04408` 以 function 0003h 輪詢位置與
