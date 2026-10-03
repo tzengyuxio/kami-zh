@@ -3,7 +3,7 @@ person	0	オオナムヂ	大穴牟遲	記
 person	1	タケヒラトリ	建比良鳥	記
 person	2	ヒノカタビコ	日之方彦	擬
 person	3	オオシラトミ	大白登美	擬
-person	4	イナダヤマヌシ	稲田山主	擬
+person	4	イナダヤマヌシ	稻田山主	擬
 person	5	タムヤサカ	田母八坂	擬
 person	6	キビツヒコ	吉備津彦	記
 person	7	アメワカヒコ	天若日子	記
@@ -25,7 +25,7 @@ person	22	ウカシマヅ	宇迦島津	擬
 person	23	ナミハヅラ	浪蔓	擬
 person	24	シライシビコ	白石彦	擬
 person	25	アメヒトナギ	天人薙	擬
-person	26	トヨクニワケ	豊國別	記
+person	26	トヨクニワケ	豐國別	記
 person	27	ハヤトマノオミ	隼人麻臣	擬
 person	28	ウサツヒコ	宇沙都彦	記
 person	29	イワクマソ	磐熊曾	擬
@@ -108,7 +108,7 @@ person	105	ワカヤマクイ	若山咋	記
 person	106	ホオリ	火遠理	記
 person	107	サザナギ	佐佐薙	擬
 person	108	ホデリ	火照	記
-person	109	シオツチ	塩椎	記
+person	109	シオツチ	鹽椎	記
 person	110	ナナル	奈那留	擬
 person	111	ヌノオシトリ	布押鳥	擬
 person	112	スナヂ	須奈遲	擬
@@ -119,7 +119,7 @@ person	116	オズマ	小妻	擬
 person	117	ミカヌシ	甕主	擬
 person	118	リキシマル	力士丸	擬
 person	119	オオシナド	大科戸	記
-person	120	トヨタマビコ	豊玉彦	記
+person	120	トヨタマビコ	豐玉彦	記
 person	121	ツツラナギ	葛薙	擬
 person	122	サヨリヒメ	狭依姫	記
 person	123	タキツヒメ	多岐都姫	記
@@ -131,7 +131,7 @@ person	128	オオモノヌシ	大物主	記
 person	129	アメノウズメ	天宇受売	記
 person	130	タケミカヅチ	建御雷	記
 person	131	トリフネノカミ	鳥船神	記
-person	132	ニニギノミコト	邇邇芸命	記
+person	132	ニニギノミコト	邇邇藝命	記
 person	133	オモイカネ	思金	記
 person	134	カイナダ	貝灘	擬
 person	135	アカイコ	阿加伊子	擬
@@ -159,10 +159,10 @@ term		天つ金	天津金	擬
 term		牛鬼	牛鬼	記
 term		鬼道師	鬼道師	記
 term		玉造	玉造	記
-place		ヤイヅ	焼津	記
+place		ヤイヅ	燒津	記
 place		コシ	越	記
 place		ヤマシロ	山城	記
-term		竜宮城	竜宮城	記
+term		竜宮城	龍宮城	記
 term		海幸	海幸	記
 term		山幸	山幸	記
 term		土師部	土師部	記
