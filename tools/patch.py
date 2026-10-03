@@ -10,6 +10,9 @@ Strings in this game are NUL-terminated, so a translation shorter than the
 original is fine: we write it followed by a NUL and leave the rest alone.
 A translation that is exactly as long as the original needs no NUL -- the
 original's own terminator already sits just past max_bytes.
+
+A few strings (the OPEN.EXE narration) break lines with a raw 0x0a; in the
+TSV that is written as the two characters `\\n`.
 """
 from __future__ import annotations
 
@@ -30,7 +33,8 @@ def load(tsv: str) -> list[dict]:
 
 def encode(text: str) -> tuple[bytes | None, list[str]]:
     """Encode to Shift-JIS, reporting characters JIS X 0208 cannot represent."""
-    missing = jis.missing(text)
+    text = text.replace("\\n", "\n")
+    missing = jis.missing(text.replace("\n", ""))
     if missing:
         return None, missing
     return text.encode("cp932"), []
