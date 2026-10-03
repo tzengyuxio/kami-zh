@@ -76,7 +76,7 @@ uv pip install pillow
 | 劇情（`translation/event.tsv`） | ✅ 2365 / 2365 |
 | UI（`translation/main_ui.tsv`） | ✅ 918 / 950 條（全畫面：道具、村落指令、情報、戰鬥、部隊、商店、系統訊息） |
 | 開始選單／磁片提示 | ✅ 38 條 |
-| 魔物名（70） | ⬜ |
+| 魔物名 | ✅ 60 / 60（另 10 筆是空白佔位） |
 
 人名以**古事記的漢字原形**為準（150 筆中 57 筆有典可考，其餘依音義組字）。
 審閱用的拆分清單見 [`docs/glossary-review.md`](docs/glossary-review.md)，

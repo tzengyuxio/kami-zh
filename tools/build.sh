@@ -41,6 +41,10 @@ apply translation/trial_startmenu.tsv MAIN.EXE
 "$py" tools/tables.py game/KAMI/SDATA.CIM --table SDATA.CIM \
     --glossary translation/glossary.tsv --out build/KAMI/SDATA.CIM
 
+# monster names (RPDATA.CIM, same fixed-width records)
+"$py" tools/tables.py game/KAMI/RPDATA.CIM --table RPDATA.CIM \
+    --glossary translation/glossary.tsv --out build/KAMI/RPDATA.CIM
+
 # Story text: EVENT.DAT is rebuilt from scratch, so translations may be any
 # length. The block offsets this moves live in MAIN.EXE, which is why the
 # already-patched MAIN.EXE goes in and comes back out.
