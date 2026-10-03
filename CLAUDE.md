@@ -41,7 +41,7 @@ tools/dosbox/run.sh [秒數]
 
 `translation/*.tsv` 是譯文正本；`extracted/text/*.tsv` 是工具抽出的原文對照（分析產物，有進版控）。`tools/install.py` 把它們依檔案類型分派給三種不同的回寫機制，順序有依賴：
 
-1. **就地覆寫**（`patch.py`）——`MAIN.EXE` 的 UI 字串（`main_ui.tsv`、`trial_startmenu.tsv`）與 `OPEN.EXE` 的片頭敘事（`open_ui.tsv`）。譯文**不得超過 `max_bytes`**，比原文短補 NUL。`MAIN.EXE` 大小必須不變。片頭旁白用原始 `0x0a` 換行，在 TSV 中寫成 `\n`；片頭的 `W`／`N`／`X` 控制碼同劇情規則，須原樣同序保留（`patch.py` 不檢查這點）。`extracted/text/open_ui.tsv` 是被換行切碎的舊抽取結果，以 `translation/open_ui.tsv` 為準。
+1. **就地覆寫**（`patch.py`）——`MAIN.EXE` 的 UI 字串（`main_ui.tsv`）與 `OPEN.EXE` 的片頭敘事（`open_ui.tsv`）。譯文**不得超過 `max_bytes`**，比原文短補 NUL。`MAIN.EXE` 大小必須不變。片頭旁白用原始 `0x0a` 換行，在 TSV 中寫成 `\n`；片頭的 `W`／`N`／`X` 控制碼同劇情規則，須原樣同序保留（`patch.py` 不檢查這點）。`extracted/text/open_ui.tsv` 是被換行切碎的舊抽取結果，以 `translation/open_ui.tsv` 為準。
 2. **固定長度 record**（`tables.py`）——`SDATA.CIM`（人物 150 筆）、`RPDATA.CIM`（魔物 70 筆），來源是 `translation/glossary.tsv`，名稱上限 14 bytes（7 個全形字）。
 3. **整檔重建**（`event.py`）——`EVENT.DAT` 劇情（`event.tsv`，以 `block`+`index` 定位）。訊息長度可變，但 block 位移索引存在 `MAIN.EXE`（`0x049f10`、`0x049fd0` 兩張 47×u32 表），所以 `event.py apply` 吃**已修補過的** `MAIN.EXE` 再寫回去——必須在 `patch.py` 之後執行。
 

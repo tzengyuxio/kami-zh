@@ -80,7 +80,6 @@ def main() -> None:
         skip_opening(BUILD / "KAMI.COM")
 
     apply_in_place("translation/main_ui.tsv", "MAIN.EXE")
-    apply_in_place("translation/trial_startmenu.tsv", "MAIN.EXE")
     apply_in_place("translation/open_ui.tsv", "OPEN.EXE")
 
     # Name tables: fixed-stride records, 14 bytes of name each.
