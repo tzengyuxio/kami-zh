@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+"""Flag inconsistencies across the translated text.
+
+Two kinds, both of which read fine line by line but look wrong in play:
+
+  variants   the same word written two ways (讓 vs 譲, 戰 vs 戦)
+  divergent  one Japanese source string translated more than one way
+
+Usage: tools/consistency.py [translation/*.tsv]
+"""
+from __future__ import annotations
+
+import csv
+import sys
+from collections import Counter, defaultdict
+
+# Traditional form -> Japanese shinjitai. Both are in JIS X 0208, so the
+# verifier passes either; only consistency tells them apart.
+PAIRS = [
+    ('讓', '譲'), ('戰', '戦'), ('繼', '継'), ('續', '続'), ('變', '変'),
+    ('亂', '乱'), ('壞', '壊'), ('惡', '悪'), ('氣', '気'), ('對', '対'),
+    ('發', '発'), ('舉', '挙'), ('轉', '転'), ('擇', '択'), ('狀', '状'),
+    ('體', '体'), ('數', '数'), ('實', '実'), ('歡', '歓'), ('應', '応'),
+    ('學', '学'), ('會', '会'), ('萬', '万'), ('與', '与'), ('當', '当'),
+    ('兒', '児'), ('勞', '労'), ('單', '単'), ('圖', '図'), ('廣', '広'),
+    ('決', '決'), ('濟', '済'), ('畫', '画'), ('聲', '声'), ('藝', '芸'),
+    ('處', '処'), ('燒', '焼'), ('鐵', '鉄'), ('關', '関'), ('驗', '験'),
+    ('樂', '楽'), ('龍', '竜'), ('顯', '顕'), ('隱', '隠'), ('覽', '覧'),
+]
+
+SRC = 'original_ja'
+DST = 'translation_zh'
+
+
+def rows(path):
+    with open(path, encoding='utf-8', newline='') as fh:
+        for r in csv.DictReader(fh, delimiter='\t'):
+            if r.get(DST, '').strip():
+                yield r
+
+
+def main(paths):
+    counts = Counter()
+    where = defaultdict(list)
+    by_source = defaultdict(set)
+
+    for path in paths:
+        for r in rows(path):
+            zh = r[DST]
+            label = f"{path}:{r.get('block', r.get('id', '?'))}/{r.get('index', '')}"
+            for ch in set(zh):
+                counts[ch] += zh.count(ch)
+                where[ch].append(label)
+            ja = r.get(SRC, '')
+            if ja:
+                by_source[ja].add(zh.strip())
+
+    problems = 0
+    for trad, shin in PAIRS:
+        if trad == shin or not (counts[trad] and counts[shin]):
+            continue
+        problems += 1
+        loser, winner = ((trad, shin) if counts[trad] < counts[shin]
+                         else (shin, trad))
+        print(f"變體混用 {trad}({counts[trad]}) / {shin}({counts[shin]})"
+              f" -- 少數的是 {loser}，出現在:")
+        for label in where[loser][:6]:
+            print(f"    {label}")
+
+    for ja, zhs in sorted(by_source.items()):
+        if len(zhs) < 2:
+            continue
+        problems += 1
+        print(f"同原文多種譯法: {ja}")
+        for zh in sorted(zhs):
+            print(f"    {zh}")
+
+    print(f"{len(paths)} 個檔案, {problems} 項不一致")
+    return 1 if problems else 0
+
+
+if __name__ == '__main__':
+    args = sys.argv[1:] or ['translation/event.tsv', 'translation/main_ui.tsv']
+    sys.exit(main(args))
