@@ -23,6 +23,9 @@ extracted/gfx/
 
 # Patched game build output
 build/
+
+# DOSBox-X save states (written to save/ under the launch directory)
+save/
 .claude/
 
 # Playthrough screenshots are game artwork
