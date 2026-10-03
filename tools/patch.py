@@ -12,13 +12,16 @@ A translation that is exactly as long as the original needs no NUL -- the
 original's own terminator already sits just past max_bytes.
 
 A few strings (the OPEN.EXE narration) break lines with a raw 0x0a; in the
-TSV that is written as the two characters `\\n`.
+TSV that is written as the two characters `\\n`. Colour codes (ESC 'C' digit
+0x01) are written `{C6}`, so a row can start at a colour code and move text
+in front of it.
 """
 from __future__ import annotations
 
 import argparse
 import csv
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -34,9 +37,10 @@ def load(tsv: str) -> list[dict]:
 def encode(text: str) -> tuple[bytes | None, list[str]]:
     """Encode to Shift-JIS, reporting characters JIS X 0208 cannot represent."""
     text = text.replace("\\n", "\n")
-    missing = jis.missing(text.replace("\n", ""))
+    missing = jis.missing(re.sub(r"\{C\d\}", "", text).replace("\n", ""))
     if missing:
         return None, missing
+    text = re.sub(r"\{C(\d)\}", "\x1bC\\1\x01", text)
     return text.encode("cp932"), []
 
 

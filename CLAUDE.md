@@ -61,7 +61,7 @@ tools/dosbox/run.sh [秒數]
 - **劇情每則訊息硬上限 70 bytes**（引擎固定緩衝區，含控制碼）；超過可用 `Cnnn` 接續，各段內容可重新分配。
 - **控制碼（訊息中所有 ASCII）必須原樣、同序保留**：`G` 換行、`W` 等待、`N`/`X` 換頁、`S`、`U` 主角名、`Y`、`Cnnn`、`Fnnn`、`%s` 等。
 - **UI 字串**：printf 格式符個數與順序不變；半形空白是對齊用的，譯文變短要補空白。`extracted/text/main_ui.tsv` 約 90 筆 offset 落在字串中段、帶亂碼前綴——那是前一筆資料的尾巴，不能覆寫。
-- `consistency.py` 剩下的 5 筆「同原文多種譯法」是已知誤報（跨訊息的句尾片段），列在 `docs/translation-style.md`。
+- `consistency.py` 剩下的 6 筆「同原文多種譯法」是已知誤報（跨訊息的句尾片段），列在 `docs/translation-style.md`。
 - 人名以古事記漢字原形為準，依據見 `docs/glossary-review.md`。
 
 ## 模擬器踩坑
