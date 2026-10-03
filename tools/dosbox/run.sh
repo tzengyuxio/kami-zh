@@ -26,6 +26,8 @@ conf=$(mktemp -t kami-conf)
   echo 'copy c:\KAMI\BDISK.VER a:\ > nul'
   # build/FAKEMS.COM, if present, scripts the mouse (see tools/mousetsr.py)
   [ -f "$root/build/FAKEMS.COM" ] && echo 'c:\FAKEMS.COM'
+  # build/EXPKEY.COM, if present, adds the Ctrl+E EXP hotkey (see tools/exptsr.py)
+  [ -f "$root/build/EXPKEY.COM" ] && echo 'c:\EXPKEY.COM'
   echo "cd KAMI"
   [ -n "$limit" ] && echo "config -avistart"
   echo "KAMI.COM"

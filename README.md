@@ -48,6 +48,7 @@ uv pip install pillow
 | `tools/install.py` | 一鍵把 `game/` 修補成 `build/`（跨平台，純標準庫） |
 | `tools/savepatch.py` | 把舊存檔裡的村名、人名更新成目前 build 的譯名（原檔留 `.bak`） |
 | `tools/mousetsr.py` | 產生腳本化滑鼠的 DOS TSR，用來自動化選單操作 |
+| `tools/exptsr.py` | 產生熱鍵 TSR：遊戲中按 Ctrl+E，指定人物下次獲得經驗即升級 |
 
 範例：
 
@@ -179,6 +180,14 @@ tools/dosbox/run.sh 60    # 錄 60 秒到 build/captures/ 後自動結束
 
 ```sh
 python3 tools/savepatch.py build/KAMI/SAVEDATA.DAT
+```
+
+想加快升級時，產生熱鍵 TSR（參數是人物編號，0 是主角），`run.sh` 偵測到
+`build/EXPKEY.COM` 就會在遊戲前載入。遊戲中按 **Ctrl+E**，列出的人物「距下一級」
+變成 1，下次獲得經驗就升級；高音表示成功，低音表示沒找到資料。刪掉該檔即停用：
+
+```sh
+python3 tools/exptsr.py build/EXPKEY.COM 0 40 48
 ```
 
 ### 腳本化滑鼠
