@@ -19,6 +19,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+import tables
+
 ROOT = Path(__file__).resolve().parent.parent
 GAME = ROOT / "game" / "KAMI"
 BUILD = ROOT / "build" / "KAMI"
@@ -86,6 +88,12 @@ def main() -> None:
     for table in ("SDATA.CIM", "RPDATA.CIM"):
         run("tables.py", rel(GAME / table), "--table", table,
             "--glossary", "translation/glossary.tsv", "--out", rel(BUILD / table))
+
+    # A new game starts from SDATA.CIM's own copy of the village table, so the
+    # village names just patched into MAIN.EXE are carried across.
+    sdata = bytearray((BUILD / "SDATA.CIM").read_bytes())
+    tables.copy_village_names((BUILD / "MAIN.EXE").read_bytes(), sdata)
+    (BUILD / "SDATA.CIM").write_bytes(bytes(sdata))
 
     # Story text: EVENT.DAT is rebuilt from scratch, so translations may be any
     # length. The block offsets this moves live in MAIN.EXE, which is why the

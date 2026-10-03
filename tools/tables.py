@@ -31,6 +31,22 @@ TABLES = {
 }
 
 
+# MAIN.EXE and SDATA.CIM each carry the same 29-record village table; only the
+# leading name (NUL-padded, 9 bytes) is text. A new game starts from SDATA.CIM's
+# copy, so the names translated in MAIN.EXE (main_ui.tsv) have to be carried
+# across -- main_ui.tsv stays the single source for village names.
+VILLAGES = dict(main=0x04BE94, sdata=0x92, stride=29, count=29, name_field=9)
+
+
+def copy_village_names(main_exe: bytes, sdata: bytearray) -> None:
+    v = VILLAGES
+    for i in range(v["count"]):
+        src = v["main"] + i * v["stride"]
+        name = main_exe[src:src + v["name_field"]].split(b"\x00")[0]
+        dst = v["sdata"] + i * v["stride"]
+        sdata[dst:dst + v["name_field"]] = name.ljust(v["name_field"], b"\x00")
+
+
 def decode_name(raw: bytes) -> str:
     raw = raw.split(b"\x00")[0]
     try:

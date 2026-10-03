@@ -45,6 +45,8 @@ tools/dosbox/run.sh [秒數]
 2. **固定長度 record**（`tables.py`）——`SDATA.CIM`（人物 150 筆）、`RPDATA.CIM`（魔物 70 筆），來源是 `translation/glossary.tsv`，名稱上限 14 bytes（7 個全形字）。
 3. **整檔重建**（`event.py`）——`EVENT.DAT` 劇情（`event.tsv`，以 `block`+`index` 定位）。訊息長度可變，但 block 位移索引存在 `MAIN.EXE`（`0x049f10`、`0x049fd0` 兩張 47×u32 表），所以 `event.py apply` 吃**已修補過的** `MAIN.EXE` 再寫回去——必須在 `patch.py` 之後執行。
 
+`SDATA.CIM` 另有一份與 `MAIN.EXE 0x04be94` 相同的村落表（`0x92` 起），新遊戲從這份讀；`install.py` 會把 `MAIN.EXE` 已譯的村名複製過去，所以村名只改 `main_ui.tsv`。存檔（`SAVEDATA.DAT`）的每個欄位都是 `SDATA.CIM` 的快照，名稱在開新遊戲時就固定了——譯名更新後要用 `tools/savepatch.py` 修補舊存檔。
+
 `trial_event.tsv` 是早期就地覆寫試譯的遺留格式，`install.py` 不使用它。
 
 格式細節（NPK016 壓縮、XOR 0x77、block 結構、控制碼）見 `docs/formats.md`。

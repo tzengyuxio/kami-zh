@@ -46,6 +46,7 @@ uv pip install pillow
 | `tools/event.py` | 解析／重建 `EVENT.DAT`，支援**變長**譯文 |
 | `tools/jis.py` | 檢查用字是否在 JIS X 0208 內，並給替代建議 |
 | `tools/install.py` | 一鍵把 `game/` 修補成 `build/`（跨平台，純標準庫） |
+| `tools/savepatch.py` | 把舊存檔裡的村名、人名更新成目前 build 的譯名（原檔留 `.bak`） |
 | `tools/mousetsr.py` | 產生腳本化滑鼠的 DOS TSR，用來自動化選單操作 |
 
 範例：
@@ -171,6 +172,13 @@ JIS X 0208 收的是日系字形，繁體常用字會有缺口。試譯時實際
 python3 tools/install.py  # 把 game/ 複製到 build/ 並套用全部譯文
 tools/dosbox/run.sh       # 開視窗遊玩
 tools/dosbox/run.sh 60    # 錄 60 秒到 build/captures/ 後自動結束
+```
+
+存檔會把開新遊戲當時的村名、人名一起存下來，之後不會再從遊戲檔讀取。
+譯名有更新時，舊存檔要另外修補（先跑 `install.py`）：
+
+```sh
+python3 tools/savepatch.py build/KAMI/SAVEDATA.DAT
 ```
 
 ### 腳本化滑鼠
