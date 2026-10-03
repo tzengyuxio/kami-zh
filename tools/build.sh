@@ -7,7 +7,16 @@
 set -euo pipefail
 
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-py="$root/.venv/bin/python"
+# The patch path is pure stdlib, so any python3 will do; .venv is only needed
+# for the graphics tools (pillow). Prefer it when present.
+if [ -x "$root/.venv/bin/python" ]; then
+  py="$root/.venv/bin/python"
+elif command -v python3 > /dev/null; then
+  py=python3
+else
+  echo "找不到 python3" >&2
+  exit 1
+fi
 cd "$root"
 
 mkdir -p build/KAMI

@@ -21,6 +21,12 @@ game/KAMI/EVENT.DAT
 
 ## 環境
 
+回寫譯文（`tools/build.sh` 用到的 `patch.py`／`event.py`／`tables.py`）
+**只用標準庫**，有 `python3` 就能跑，不必建虛擬環境。
+`tools/build.sh` 會優先用 `.venv/bin/python`，沒有就退回 `python3`。
+
+圖形工具（`npk.py`／`gfx.py`／`rawgfx.py`）需要 pillow：
+
 ```sh
 uv venv
 uv pip install pillow
