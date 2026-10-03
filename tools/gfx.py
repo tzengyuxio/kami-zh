@@ -2,8 +2,9 @@
 """Export NPK016 archives to PNG.
 
 Images are written as indexed-color (mode "P") PNGs so the 16-entry palette
-can be swapped later without re-decoding. Pass --palette to supply a real
-palette; without it a visually distinct placeholder ramp is used.
+can be swapped later without re-decoding. Colours come from the measured game
+palette (tools/palette.py); --scene picks which set fills entries 8-15, and
+--palette overrides it with a JSON file of 16 [r,g,b] entries.
 """
 from __future__ import annotations
 
@@ -16,15 +17,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import npk
-
-# Standard EGA/VGA 16-colour palette: good enough to judge image structure
-# before the real palette is located.
-PLACEHOLDER = [
-    (0x00, 0x00, 0x00), (0x00, 0x00, 0xAA), (0x00, 0xAA, 0x00), (0x00, 0xAA, 0xAA),
-    (0xAA, 0x00, 0x00), (0xAA, 0x00, 0xAA), (0xAA, 0x55, 0x00), (0xAA, 0xAA, 0xAA),
-    (0x55, 0x55, 0x55), (0x55, 0x55, 0xFF), (0x55, 0xFF, 0x55), (0x55, 0xFF, 0xFF),
-    (0xFF, 0x55, 0x55), (0xFF, 0x55, 0xFF), (0xFF, 0xFF, 0x55), (0xFF, 0xFF, 0xFF),
-]
+import palette as game_palette
 
 
 def to_image(pixels: bytes, width: int, height: int, palette: list) -> Image.Image:
@@ -40,10 +33,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("file")
     ap.add_argument("--out-dir", default="extracted/gfx")
+    ap.add_argument("--scene", choices=sorted(game_palette.SCENES), default="field",
+                    help="which measured set fills colours 8-15")
     ap.add_argument("--palette", help="JSON file with 16 [r,g,b] entries")
     args = ap.parse_args()
 
-    palette = PLACEHOLDER
+    palette = game_palette.palette(args.scene)
     if args.palette:
         palette = [tuple(c) for c in json.load(open(args.palette))]
 

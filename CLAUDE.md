@@ -49,6 +49,8 @@ tools/dosbox/run.sh [秒數]
 
 格式細節（NPK016 壓縮、XOR 0x77、block 結構、控制碼）見 `docs/formats.md`。
 
+圖形匯出（`gfx.py`／`rawgfx.py`）的顏色來自 `tools/palette.py`，是從 DOSBox-X raw 截圖（索引色 PNG，帶實際 DAC 值）量出來的：色號 0–7 全遊戲固定，8–15 依場景（`--scene field|village|cave`）。圖檔色號＝螢幕色號，所以要確認新場景的色盤，就截圖後讀 PNG 的 palette，再拿 chunk 與截圖逐像素比對（見 `docs/formats.md` §2）。
+
 ## 翻譯時的硬限制
 
 - **JIS X 0208 ≠ cp932**：cp932 能編碼的 NEC/IBM 擴充字在 DOS/V 字型裡沒字模（顯示空白）。用 `tools/jis.py` 的檢查，不要只看「能不能 encode cp932」。

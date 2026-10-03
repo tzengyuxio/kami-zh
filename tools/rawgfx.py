@@ -16,9 +16,7 @@ import os
 
 from PIL import Image
 
-def gray_ramp(bpp: int) -> list[tuple[int, int, int]]:
-    n = 1 << bpp
-    return [(i * 255 // (n - 1),) * 3 for i in range(n)]
+import palette as game_palette
 
 
 def decode_packed(data: bytes, bpp: int) -> list[int]:
@@ -73,6 +71,8 @@ def main():
     ap.add_argument("--layout", choices=["packed", "rowplane", "chunky"], default="chunky")
     ap.add_argument("--count", type=int, default=0, help="0 = as many as fit")
     ap.add_argument("--cols", type=int, default=8)
+    ap.add_argument("--scene", choices=sorted(game_palette.SCENES), default="field",
+                    help="which measured set fills colours 8-15 (3bpp images never reach them)")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -81,7 +81,7 @@ def main():
     count = args.count or len(data) // tile_bytes
 
     palette = []
-    for rgb in gray_ramp(args.bpp):
+    for rgb in game_palette.palette(args.scene)[:1 << args.bpp]:
         palette.extend(rgb)
     palette += [0] * (768 - len(palette))
 

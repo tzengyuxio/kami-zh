@@ -38,6 +38,7 @@ uv pip install pillow
 | `tools/npk.py` | NPK016 圖形容器：讀 offset table、解壓 chunk |
 | `tools/gfx.py` | 把 NPK016 容器輸出成 PNG |
 | `tools/rawgfx.py` | 渲染未壓縮的 planar 圖形（`FACEGRP.DAT` 等） |
+| `tools/palette.py` | 實測的遊戲色盤（固定 0–7 色＋地圖／村落／洞窟三組 8–15 色） |
 | `tools/sjis_scan.py` | 掃描檔案中的 Shift-JIS 字串 |
 | `tools/text.py` | 抽出可翻譯文字成 TSV（支援 XOR 解碼與區段限定） |
 | `tools/tables.py` | 匯出固定長度 record 的名稱表成 TSV |
@@ -53,8 +54,9 @@ uv pip install pillow
 # 列出 NPK 容器結構並驗證解壓
 .venv/bin/python tools/npk.py game/KAMI/GRAPH.NPK
 
-# 輸出 PNG
+# 輸出 PNG（色號 8–15 依 --scene 選 field／village／cave，預設 field）
 .venv/bin/python tools/gfx.py game/KAMI/GRAPH.NPK
+.venv/bin/python tools/gfx.py game/KAMI/GRAPH.NPK --scene cave --out-dir extracted/gfx/cave
 
 # 20 張 48x64 Q 版人物立繪
 .venv/bin/python tools/rawgfx.py game/KAMI/FACEGRP.DAT \
