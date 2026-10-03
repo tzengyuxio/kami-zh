@@ -24,3 +24,6 @@ extracted/gfx/
 # Patched game build output
 build/
 .claude/
+
+# Playthrough screenshots are game artwork
+screenshots/
