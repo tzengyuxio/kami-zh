@@ -21,9 +21,8 @@ game/KAMI/EVENT.DAT
 
 ## 環境
 
-回寫譯文（`tools/build.sh` 用到的 `patch.py`／`event.py`／`tables.py`）
+回寫譯文（`tools/install.py` 與它用到的 `patch.py`／`event.py`／`tables.py`）
 **只用標準庫**，有 `python3` 就能跑，不必建虛擬環境。
-`tools/build.sh` 會優先用 `.venv/bin/python`，沒有就退回 `python3`。
 
 圖形工具（`npk.py`／`gfx.py`／`rawgfx.py`）需要 pillow：
 
@@ -45,7 +44,7 @@ uv pip install pillow
 | `tools/patch.py` | 把譯文寫回遊戲檔（檢查 JIS 字庫與位元組上限） |
 | `tools/event.py` | 解析／重建 `EVENT.DAT`，支援**變長**譯文 |
 | `tools/jis.py` | 檢查用字是否在 JIS X 0208 內，並給替代建議 |
-| `tools/build.sh` | 一鍵把 `game/` 修補成 `build/` |
+| `tools/install.py` | 一鍵把 `game/` 修補成 `build/`（跨平台，純標準庫） |
 | `tools/mousetsr.py` | 產生腳本化滑鼠的 DOS TSR，用來自動化選單操作 |
 
 範例：
@@ -167,7 +166,7 @@ JIS X 0208 收的是日系字形，繁體常用字會有缺口。試譯時實際
 ## 在模擬器上執行
 
 ```sh
-tools/build.sh            # 把 game/ 複製到 build/ 並套用全部譯文
+python3 tools/install.py  # 把 game/ 複製到 build/ 並套用全部譯文
 tools/dosbox/run.sh       # 開視窗遊玩
 tools/dosbox/run.sh 60    # 錄 60 秒到 build/captures/ 後自動結束
 ```
@@ -215,7 +214,7 @@ ffmpeg -y -i /tmp/k.avi -vf "fps=1" /tmp/frames/k%03d.png
 - `mount` 吃的是**主機路徑**；`imgmake` 的輸出要寫**純檔名**
   （`imgmake da.img`），給 `c:\da.img` 會失敗。
 - 直接跑 `MAIN.EXE` 只有黑畫面 —— `KAMI.COM` 會安裝一個 INT 65h handler
-  給它用。`tools/build.sh` 改寫 `KAMI.COM` 裡的 `OPEN.EXE` 字串指向
+  給它用。`tools/install.py` 改寫 `KAMI.COM` 裡的 `OPEN.EXE` 字串指向
   `MAIN.EXE`，藉此跳過兩分鐘的片頭又保留 INT 65h（設 `SKIP_OPENING=0`
   可關掉）。
 - **遊戲選單是滑鼠驅動的。** 畫面上那個橘色方框就是滑鼠游標，Enter 等同
