@@ -31,11 +31,13 @@ TABLES = {
 }
 
 
-# MAIN.EXE and SDATA.CIM each carry the same 29-record village table; only the
-# leading name (NUL-padded, 9 bytes) is text. A new game starts from SDATA.CIM's
+# MAIN.EXE and SDATA.CIM each carry the same 32-record village table (the 29
+# villages, クマソ, then ヤマ and チヌマ in the mist continent); only the leading
+# name (NUL-padded, 9 bytes) is text.
+# A new game starts from SDATA.CIM's
 # copy, so the names translated in MAIN.EXE (main_ui.tsv) have to be carried
 # across -- main_ui.tsv stays the single source for village names.
-VILLAGES = dict(main=0x04BE94, sdata=0x92, stride=29, count=29, name_field=9)
+VILLAGES = dict(main=0x04BE94, sdata=0x92, stride=29, count=32, name_field=9)
 
 
 def copy_village_names(main_exe: bytes, sdata: bytearray) -> None:

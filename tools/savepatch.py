@@ -10,7 +10,7 @@ and never re-read: a save made before a name was translated keeps the old
 text for good. This rewrites the name fields from build/KAMI/SDATA.CIM:
 
   header    3 x 18 bytes, hero name at +3 (what the load menu shows)
-  villages  slot + 0x92,   29 records x 29 bytes, name in the first 9
+  villages  slot + 0x92,   32 records x 29 bytes, name in the first 9
   people    slot + 0x1372, 150 records x 33 bytes, name in the first 15
 
 Nothing but name bytes changes. The hero (person 0) is named by the player,
