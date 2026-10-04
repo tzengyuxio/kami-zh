@@ -24,7 +24,7 @@ game/KAMI/EVENT.DAT
 回寫譯文（`tools/install.py` 與它用到的 `patch.py`／`event.py`／`tables.py`）
 **只用標準庫**，有 `python3` 就能跑，不必建虛擬環境。
 
-圖形工具（`npk.py`／`gfx.py`／`rawgfx.py`）需要 pillow：
+圖形工具（`npk.py`／`gfx.py`／`rawgfx.py`／`worldmap.py`／`forcemap.py`／`villagemap.py`／`dungeonmap.py`）需要 pillow：
 
 ```sh
 uv venv
@@ -38,6 +38,10 @@ uv pip install pillow
 | `tools/npk.py` | NPK016 圖形容器：讀 offset table、解壓 chunk |
 | `tools/gfx.py` | 把 NPK016 容器輸出成 PNG |
 | `tools/rawgfx.py` | 渲染未壓縮的 planar 圖形（`FACEGRP.DAT` 等） |
+| `tools/worldmap.py` | 繪製大地圖（日文／中文村名版）、各村領地與相鄰線，並列出相鄰表 |
+| `tools/forcemap.py` | 繪製村莊畫面的勢力地圖，各區塊標上村名（日文／中文） |
+| `tools/villagemap.py` | 繪製 32 張村莊平面圖（標出村長家、倉庫、鍛冶屋、入口等） |
+| `tools/dungeonmap.py` | 繪製 13 座迷宮共 85 層的地圖 |
 | `tools/palette.py` | 實測的遊戲色盤（固定 0–7 色＋地圖／村落／洞窟三組 8–15 色） |
 | `tools/sjis_scan.py` | 掃描檔案中的 Shift-JIS 字串 |
 | `tools/text.py` | 抽出可翻譯文字成 TSV（支援 XOR 解碼與區段限定） |
@@ -47,6 +51,8 @@ uv pip install pillow
 | `tools/jis.py` | 檢查用字是否在 JIS X 0208 內，並給替代建議 |
 | `tools/install.py` | 一鍵把 `game/` 修補成 `build/`（跨平台，純標準庫） |
 | `tools/savepatch.py` | 把舊存檔裡的村名、人名更新成目前 build 的譯名（原檔留 `.bak`） |
+| `tools/maxgear.py` | 遊玩輔助：把 build 的 `MAIN.EXE` 中所有武器攻擊、防具防禦設成 255（`install.py` 會還原，需重跑） |
+| `tools/weakfoes.py` | 遊玩輔助：把 build 的 `RPDATA.CIM` 魔物體力、`BPDATA.CIM` 頭目各部位體力設成 10（`install.py` 會還原，需重跑） |
 | `tools/mousetsr.py` | 產生腳本化滑鼠的 DOS TSR，用來自動化選單操作 |
 | `tools/exptsr.py` | 產生熱鍵 TSR：遊戲中按 Ctrl+E，指定人物下次獲得經驗即升級 |
 
@@ -85,6 +91,7 @@ uv pip install pillow
 | 劇情（`translation/event.tsv`） | ✅ 2365 / 2365 |
 | UI（`translation/main_ui.tsv`） | ✅ 1309 條（全畫面：道具、術法、職業、村落指令、情報、戰鬥、部隊、商店、系統訊息、開始選單、磁片提示） |
 | 片頭（`translation/open_ui.tsv`） | ✅ 4 段敘事（`OPEN.EXE` 的錯誤訊息未譯） |
+| 結局（`translation/end_ui.tsv`） | ✅ 4 段獨白（`END.EXE` 的錯誤訊息未譯） |
 | 魔物名 | ✅ 60 / 60（另 10 筆是空白佔位） |
 
 人名以**古事記的漢字原形**為準（150 筆中 57 筆有典可考，其餘依音義組字）。
@@ -233,9 +240,13 @@ ffmpeg -y -i /tmp/k.avi -vf "fps=1" /tmp/frames/k%03d.png
 - `mount` 吃的是**主機路徑**；`imgmake` 的輸出要寫**純檔名**
   （`imgmake da.img`），給 `c:\da.img` 會失敗。
 - 直接跑 `MAIN.EXE` 只有黑畫面 —— `KAMI.COM` 會安裝一個 INT 65h handler
-  給它用。`tools/install.py` 改寫 `KAMI.COM` 裡的 `OPEN.EXE` 字串指向
-  `MAIN.EXE`，藉此跳過兩分鐘的片頭又保留 INT 65h（設 `SKIP_OPENING=0`
-  可關掉）。
+  給它用。`KAMI.COM` 依序執行 `OPEN.EXE` → `MAIN.EXE` → `END.EXE`（`MAIN.EXE`
+  以結束碼 0 結束，也就是打倒最終頭目後，才會播 ED）。`tools/install.py` 把
+  執行 `OPEN.EXE` 的那段程式碼改成 NOP，藉此跳過兩分鐘的片頭又保留 INT 65h
+  （設 `SKIP_OPENING=0` 可關掉）。早期是把 `OPEN.EXE` 字串改成 `MAIN.EXE`，
+  結果 `MAIN.EXE` 會跑兩次，破關後回到標題畫面而不是 ED。
+  `install.py` 另外產生只播 ED 的 `build/KAMI/ENDING.COM`：
+  `env KAMI_START=ENDING.COM tools/dosbox/run.sh`。
 - **遊戲選單是滑鼠驅動的。** 畫面上那個橘色方框就是滑鼠游標，Enter 等同
   「在游標位置點一下」，方向鍵完全無效。DOSBox-X 的 `AUTOTYPE` 只能送鍵盤，
   mapper 也沒有滑鼠移動/點擊事件 —— 所以**滑鼠驅動的畫面無法自動化**，
@@ -249,6 +260,7 @@ ffmpeg -y -i /tmp/k.avi -vf "fps=1" /tmp/frames/k%03d.png
 - [`docs/formats.md`](docs/formats.md) — 檔案格式分析（含未解項）
 - [`docs/translation-style.md`](docs/translation-style.md) — 翻譯風格指南（語域、缺字處理、專有名詞表）
 - [`docs/glossary-review.md`](docs/glossary-review.md) — 人名譯法審閱清單
+- [`docs/guide/`](docs/guide/README.md) — 遊玩攻略資料（各村、鍛冶、道具、術法、身分）
 
 ## 致謝
 

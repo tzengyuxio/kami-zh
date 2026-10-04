@@ -41,7 +41,7 @@ tools/dosbox/run.sh [秒數]
 
 `translation/*.tsv` 是譯文正本；`extracted/text/*.tsv` 是工具抽出的原文對照（分析產物，有進版控）。`tools/install.py` 把它們依檔案類型分派給三種不同的回寫機制，順序有依賴：
 
-1. **就地覆寫**（`patch.py`）——`MAIN.EXE` 的 UI 字串（`main_ui.tsv`）與 `OPEN.EXE` 的片頭敘事（`open_ui.tsv`）。譯文**不得超過 `max_bytes`**，比原文短補 NUL。`MAIN.EXE` 大小必須不變。片頭旁白用原始 `0x0a` 換行，在 TSV 中寫成 `\n`；片頭的 `W`／`N`／`X` 控制碼同劇情規則，須原樣同序保留（`patch.py` 不檢查這點）。`extracted/text/open_ui.tsv` 是被換行切碎的舊抽取結果，以 `translation/open_ui.tsv` 為準。
+1. **就地覆寫**（`patch.py`）——`MAIN.EXE` 的 UI 字串（`main_ui.tsv`）、`OPEN.EXE` 的片頭敘事（`open_ui.tsv`）與 `END.EXE` 的結局獨白（`end_ui.tsv`）。譯文**不得超過 `max_bytes`**，比原文短補 NUL。`MAIN.EXE` 大小必須不變。片頭旁白用原始 `0x0a` 換行，在 TSV 中寫成 `\n`；片頭的 `W`／`N`／`X` 控制碼同劇情規則，須原樣同序保留（`patch.py` 不檢查這點）。`extracted/text/open_ui.tsv` 是被換行切碎的舊抽取結果，以 `translation/open_ui.tsv` 為準。
 2. **固定長度 record**（`tables.py`）——`SDATA.CIM`（人物 150 筆）、`RPDATA.CIM`（魔物 70 筆），來源是 `translation/glossary.tsv`，名稱上限 14 bytes（7 個全形字）。
 3. **整檔重建**（`event.py`）——`EVENT.DAT` 劇情（`event.tsv`，以 `block`+`index` 定位）。訊息長度可變，但 block 位移索引存在 `MAIN.EXE`（`0x049f10`、`0x049fd0` 兩張 47×u32 表），所以 `event.py apply` 吃**已修補過的** `MAIN.EXE` 再寫回去——必須在 `patch.py` 之後執行。
 
@@ -61,12 +61,12 @@ tools/dosbox/run.sh [秒數]
 - **劇情每則訊息硬上限 70 bytes**（引擎固定緩衝區，含控制碼）；超過可用 `Cnnn` 接續，各段內容可重新分配。
 - **控制碼（訊息中所有 ASCII）必須原樣、同序保留**：`G` 換行、`W` 等待、`N`/`X` 換頁、`S`、`U` 主角名、`Y`、`Cnnn`、`Fnnn`、`%s` 等。
 - **UI 字串**：printf 格式符個數與順序不變；半形空白是對齊用的，譯文變短要補空白。`extracted/text/main_ui.tsv` 約 90 筆 offset 落在字串中段、帶亂碼前綴——那是前一筆資料的尾巴，不能覆寫。
-- `consistency.py` 剩下的 6 筆「同原文多種譯法」是已知誤報（跨訊息的句尾片段），列在 `docs/translation-style.md`。
+- `consistency.py` 剩下的 8 筆「同原文多種譯法」是已知誤報（跨訊息的句尾片段），列在 `docs/translation-style.md`。
 - 人名以古事記漢字原形為準，依據見 `docs/glossary-review.md`。
 
 ## 模擬器踩坑
 
-`tools/dosbox/run.sh` 已處理好下列問題，修改時別弄壞：`dosv` 設定屬於 `[dosv]` 區段；A: 必須是 `imgmake` 做的真軟碟映像並放 `BDISK.VER`；不能直接跑 `MAIN.EXE`（需 `KAMI.COM` 安裝 INT 65h，`install.py` 改寫 `KAMI.COM` 的 `OPEN.EXE` 字串來跳過片頭）。遊戲選單是滑鼠驅動的，自動化要用 `tools/mousetsr.py` 產生 `build/FAKEMS.COM`（原理與常用座標見 README）。
+`tools/dosbox/run.sh` 已處理好下列問題，修改時別弄壞：`dosv` 設定屬於 `[dosv]` 區段；A: 必須是 `imgmake` 做的真軟碟映像並放 `BDISK.VER`；不能直接跑 `MAIN.EXE`（需 `KAMI.COM` 安裝 INT 65h，`install.py` 把 `KAMI.COM` 執行 `OPEN.EXE` 的程式碼改成 NOP 來跳過片頭；改字串會讓 `MAIN.EXE` 跑兩次、破關後不播 ED）。遊戲選單是滑鼠驅動的，自動化要用 `tools/mousetsr.py` 產生 `build/FAKEMS.COM`（原理與常用座標見 README）。
 
 ## 文件同步
 
