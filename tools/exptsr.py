@@ -11,11 +11,15 @@ was not found. The key itself is swallowed.
 
 The game keeps SDATA.CIM in memory exactly as it is laid out on disk (a
 save slot is a byte-for-byte snapshot of it), so the TSR finds the table
-the same way a person would: by content. In the 8-byte-per-person table at
-SDATA.CIM 0x26c8, byte +2 has never changed for anyone in any snapshot
-(+0 and +1 move for party members), so +2 of the first 32 people makes the
-signature. EXP-to-next is the u16 at +4. The signature is stored XOR'd so
-the scan never matches the TSR.
+the same way a person would: by content. The 8-byte-per-person table at
+SDATA.CIM 0x26c8 (EXP-to-next is the u16 at +4) has no field that is both
+fixed and varied -- byte +2 looked fixed until a war changed it -- so the
+signature comes from ANCHOR, 252 bytes that stayed the same in every save
+slot seen (63 images, through year 2). 32 of them, every 6th, are compared
+and up to TOLERANCE may differ; the region holds no 0x00 or 0xFF there, so
+blank memory cannot match. ANCHOR - TABLE is a whole number of paragraphs,
+so the table is reached by stepping the segment back. The signature is
+stored XOR'd so the scan never matches the TSR.
 
 The game reads the keyboard through BIOS INT 16h and never hooks INT 09h,
 so a plain INT 09h hook sees every key first.
@@ -32,15 +36,17 @@ from mousetsr import ORG, Asm  # noqa: E402
 GAME_SDATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'game', 'KAMI', 'SDATA.CIM')
 TABLE = 0x26C8          # 8-byte-per-person table inside SDATA.CIM
 PEOPLE = 150
-SIG_PEOPLE = 32         # records whose +2 byte forms the signature
+ANCHOR = 0x3528         # static region the signature is taken from
+SIG_BYTES, SIG_STEP = 32, 6
+TOLERANCE = 4           # signature bytes allowed to differ
 KEY = 0x5A              # XOR applied to the stored signature
 SCAN_E = 0x12           # make code of the E key
 HIGH, LOW = 1193182 // 1500, 1193182 // 300   # PIT divisors for the beeps
 
 
 def signature(sdata: bytes) -> list[tuple[int, int]]:
-    out = []
-    return [(i * 8 + 2, sdata[TABLE + i * 8 + 2]) for i in range(SIG_PEOPLE)]
+    """(offset from ANCHOR, byte) pairs."""
+    return [(k * SIG_STEP, sdata[ANCHOR + k * SIG_STEP]) for k in range(SIG_BYTES)]
 
 
 def _emit(people: list[int], sig, paragraphs: int) -> bytes:
@@ -91,12 +97,17 @@ def _emit(people: list[int], sig, paragraphs: int) -> bytes:
     a.label('off_loop')
     a.at(b'\xbe', 'pairs')                      # mov si,pairs
     a.raw(b'\xb9' + struct.pack('<H', len(sig)))
+    a.raw(b'\x30\xe4')                          # xor ah,ah  (mismatches)
     a.label('cmp_loop')
     a.raw(b'\x8a\x1c\x30\xff')                  # mov bl,[si] / xor bh,bh
     a.raw(b'\x26\x8a\x01')                      # mov al,es:[bx+di]
     a.raw(b'\x34' + bytes([KEY]))               # xor al,KEY
     a.raw(b'\x3a\x44\x01')                      # cmp al,[si+1]
-    a.rel8(b'\x75', 'no_match')
+    a.rel8(b'\x74', 'same')
+    a.raw(b'\xfe\xc4')                          # inc ah
+    a.raw(b'\x80\xfc' + bytes([TOLERANCE]))     # cmp ah,TOLERANCE
+    a.rel8(b'\x77', 'no_match')                 # ja
+    a.label('same')
     a.raw(b'\x83\xc6\x02')                      # add si,2
     a.rel8(b'\xe2', 'cmp_loop')                 # loop
     a.rel16(b'\xe8', 'patch')
@@ -111,10 +122,12 @@ def _emit(people: list[int], sig, paragraphs: int) -> bytes:
     a.raw(b'\xbb' + struct.pack('<H', HIGH))    # mov bx,HIGH
     a.rel8(b'\xeb', 'beep')
 
-    # patch: es:di is the table; EXP-to-next := 1 for each listed person
+    # patch: es:di is ANCHOR; step es back to the table, EXP-to-next := 1
     a.label('patch')
     a.at(b'\xc6\x06', 'found', b'\x01')
-    a.raw(b'\x56\x51')                          # push si / push cx
+    a.raw(b'\x56\x51\x06')                      # push si / push cx / push es
+    a.raw(b'\x8c\xc0\x2d' + struct.pack('<H', (ANCHOR - TABLE) >> 4))  # mov ax,es / sub ax,n
+    a.raw(b'\x8e\xc0')                          # mov es,ax
     a.at(b'\xbe', 'people')
     a.raw(b'\xb9' + struct.pack('<H', len(people)))
     a.label('p_loop')
@@ -122,7 +135,7 @@ def _emit(people: list[int], sig, paragraphs: int) -> bytes:
     a.raw(b'\x26\xc7\x01\x01\x00')              # mov word es:[bx+di],1
     a.raw(b'\x83\xc6\x02')                      # add si,2
     a.rel8(b'\xe2', 'p_loop')
-    a.raw(b'\x59\x5e\xc3')                      # pop cx / pop si / ret
+    a.raw(b'\x07\x59\x5e\xc3')                  # pop es / pop cx / pop si / ret
 
     # beep: bx = PIT divisor, held for 3 timer ticks
     a.label('beep')
@@ -146,6 +159,7 @@ def _emit(people: list[int], sig, paragraphs: int) -> bytes:
 
 
 def build(people: list[int], sdata: bytes) -> bytes:
+    assert (ANCHOR - TABLE) % 16 == 0
     if not people or any(not 0 <= i < PEOPLE for i in people):
         raise ValueError(f'person indices must be 0..{PEOPLE - 1}')
     sig = signature(sdata)

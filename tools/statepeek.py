@@ -24,11 +24,23 @@ PEOPLE = 0x1372
 
 
 def find(mem: bytes, sdata: bytes) -> list[int]:
-    """Start offsets of every SDATA.CIM image in `mem`."""
-    sig = dict(exptsr.signature(sdata))
-    span = max(sig) + 1
-    rx = b''.join(re.escape(bytes([sig[k]])) if k in sig else b'.' for k in range(span))
-    return [m.start() - exptsr.TABLE for m in re.finditer(rx, mem, re.DOTALL)]
+    """Start offsets of every SDATA.CIM image in `mem`.
+
+    Same test as the TSR: up to exptsr.TOLERANCE signature bytes may differ.
+    Exact matches of any 8 consecutive signature bytes give the candidates.
+    """
+    sig = exptsr.signature(sdata)
+    found = set()
+    for g in range(0, len(sig), 8):
+        group = dict(sig[g:g + 8])
+        lo, hi = min(group), max(group)
+        rx = b''.join(re.escape(bytes([group[k]])) if k in group else b'.'
+                      for k in range(lo, hi + 1))
+        for m in re.finditer(rx, mem, re.DOTALL):
+            t = m.start() - lo
+            if t >= 0 and sum(mem[t + k] != v for k, v in sig) <= exptsr.TOLERANCE:
+                found.add(t)
+    return sorted(t - exptsr.ANCHOR for t in found)
 
 
 def main():
