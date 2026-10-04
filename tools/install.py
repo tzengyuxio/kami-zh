@@ -37,20 +37,49 @@ def run(*args: str) -> None:
                    cwd=ROOT, check=True)
 
 
-def skip_opening(com: Path) -> None:
-    """Point KAMI.COM's OPEN.EXE slot at MAIN.EXE.
+# KAMI.COM at 0x25f: mov dx,011d ("OPEN.EXE"); call exec; or ah,ah; jnz error
+OPEN_EXEC = bytes.fromhex("ba1d01e8b0fe0ae47516")
+# ...then mov dx,0126 ("MAIN.EXE"); call exec; or ah,ah; jnz error; or al,al; jnz quit
+MAIN_EXEC = bytes.fromhex("ba2601e8a6fe0ae4750c0ac0750b")
+HERO_BUFFER = 0xEC     # file offset of cs:01ec, the INT 65h AH=1/2 buffer
 
-    KAMI.COM chains FMDRV -> OPEN.EXE -> MAIN.EXE. Redirecting the OPEN slot
-    skips the two-minute opening while still going through KAMI.COM, which is
-    what installs the INT 65h handler MAIN.EXE needs -- running MAIN.EXE
-    directly only gives a black screen.
+
+def skip_opening(com: Path) -> None:
+    """Drop the OPEN.EXE step from KAMI.COM.
+
+    KAMI.COM chains FMDRV -> OPEN.EXE -> MAIN.EXE -> END.EXE (END only when
+    MAIN exits with code 0, i.e. after the last boss). Going through KAMI.COM
+    matters: it installs the INT 65h handler MAIN.EXE needs -- running
+    MAIN.EXE directly only gives a black screen. Renaming the OPEN slot to
+    MAIN.EXE would run MAIN twice and so show the title again instead of the
+    ending; NOP out the OPEN exec and its error check instead.
     """
     d = bytearray(com.read_bytes())
-    i = d.find(b"OPEN.EXE\x00")
+    i = d.find(OPEN_EXEC)
     if i < 0:
-        sys.exit("KAMI.COM 裡找不到 OPEN.EXE 字串")
-    d[i:i + 8] = b"MAIN.EXE"
+        sys.exit("KAMI.COM 裡找不到執行 OPEN.EXE 的程式碼")
+    d[i:i + len(OPEN_EXEC)] = b"\x90" * len(OPEN_EXEC)
     com.write_bytes(bytes(d))
+
+
+def ending_only(com: Path, out: Path, hero: bytes) -> None:
+    """Write a KAMI.COM copy that plays only the ending (END.EXE).
+
+    For watching the ending again: tools/dosbox/run.sh with
+    KAMI_START=ENDING.COM. Works on the original or the skip_opening copy.
+    END.EXE takes the hero's name (its U code) from a 21-byte buffer in
+    KAMI.COM that MAIN.EXE fills through INT 65h AH=1 on the way out; with
+    MAIN skipped, prefill it.
+    """
+    d = bytearray(com.read_bytes())
+    if d.find(MAIN_EXEC) < 0:
+        sys.exit("KAMI.COM 裡找不到執行 MAIN.EXE 的程式碼")
+    for code in (OPEN_EXEC, MAIN_EXEC):
+        i = d.find(code)
+        if i >= 0:
+            d[i:i + len(code)] = b"\x90" * len(code)
+    d[HERO_BUFFER:HERO_BUFFER + 21] = hero[:20].ljust(21, b"\0")
+    out.write_bytes(bytes(d))
 
 
 def apply_in_place(tsv: str, target: str) -> None:
@@ -83,6 +112,7 @@ def main() -> None:
 
     apply_in_place("translation/main_ui.tsv", "MAIN.EXE")
     apply_in_place("translation/open_ui.tsv", "OPEN.EXE")
+    apply_in_place("translation/end_ui.tsv", "END.EXE")
 
     # Name tables: fixed-stride records, 14 bytes of name each.
     for table in ("SDATA.CIM", "RPDATA.CIM"):
@@ -94,6 +124,10 @@ def main() -> None:
     sdata = bytearray((BUILD / "SDATA.CIM").read_bytes())
     tables.copy_village_names((BUILD / "MAIN.EXE").read_bytes(), sdata)
     (BUILD / "SDATA.CIM").write_bytes(bytes(sdata))
+
+    # The hero's default name (person 0) for the ending-only launcher.
+    hero = sdata[0x1372:0x1372 + 15].split(b"\0")[0]
+    ending_only(BUILD / "KAMI.COM", BUILD / "ENDING.COM", hero)
 
     # Story text: EVENT.DAT is rebuilt from scratch, so translations may be any
     # length. The block offsets this moves live in MAIN.EXE, which is why the

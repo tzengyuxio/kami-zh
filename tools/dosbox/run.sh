@@ -7,6 +7,7 @@
 #
 #   tools/dosbox/run.sh            play (mouse works, click through menus)
 #   tools/dosbox/run.sh 90         record 90s to build/captures/ and exit
+#   KAMI_START=ENDING.COM tools/dosbox/run.sh   play only the ending
 #
 # Patch into build/ first; this script never touches game/.
 set -euo pipefail
@@ -30,7 +31,7 @@ conf=$(mktemp -t kami-conf)
   [ -f "$root/build/EXPKEY.COM" ] && echo 'c:\EXPKEY.COM'
   echo "cd KAMI"
   [ -n "$limit" ] && echo "config -avistart"
-  echo "KAMI.COM"
+  echo "${KAMI_START:-KAMI.COM}"
 } > "$conf"
 
 args=(-conf "$conf" -nopromptfolder -fastlaunch -nolog)
