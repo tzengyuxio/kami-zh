@@ -30,3 +30,7 @@ save/
 
 # Playthrough screenshots are game artwork
 screenshots/
+
+# Recordings (game footage)
+*.avi
+*.mp4
