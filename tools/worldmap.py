@@ -22,6 +22,7 @@ people and supplies only between bordering villages.
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import sys
 
@@ -36,6 +37,28 @@ VILLAGES, VILLAGE_SIZE, VILLAGE_COUNT = 0x92, 29, 29
 CELLS = 0x3640
 VILLAGE_CODE = 5  # metatile with the village gate
 EXTRA = ("クマソ", "熊曾")  # the 30th territory, not in the village table
+# Where the player can walk, as observed in the game (both ways). Not stored
+# anywhere found; the border-sharing table from --adjacency is wider.
+ROUTES = """
+出雲-黄泉比良坂 出雲-多藝志 多藝志-須賀 須賀-稻羽 須賀-吉備 稻羽-但馬 吉備-但馬 吉備-三輪
+三輪-熊野 三輪-三輪山 熊野-阿波見 阿波見-伊吹 阿波見-山城 阿波見-美濃 伊吹-尾張 尾張-燒津
+燒津-相模 相模-新治 新治-沼河 沼河-越 沼河-須佐 沼河-生贄洞窟 越-科野 越-和奈美 科野-山城
+科野-美濃 山城-相樂 相樂-和奈美 須佐-穴門 須佐-須佐沼 穴門-筑紫 筑紫-阿多 阿多-日向
+日向-隼人 日向-高千穗岳 隼人-宇佐 宇佐-伊都 伊都-熊曾
+血沼-死靈祭壇 死靈祭壇-邪馬 邪馬-邪馬神殿
+""".split()
+# Routes that only open for a while: closed once the event there is over,
+# or reached by talking to someone in the village (by boat), not by walking.
+CLOSED_LATER = ["稻羽-山賊洞窟", "伊吹-伊吹山"]
+BY_DIALOGUE = ["吉備-鬼之島", "和奈美-海賊之島"]
+# Map cells of the places on ROUTES that are not villages: cave entrances
+# (metatile 4) next to the village that leads there, and the four buildings
+# of the mist continent, village / dungeon / village / dungeon from top to
+# bottom (order confirmed in the game).
+SITES = {"黄泉比良坂": (22, 41), "三輪山": (75, 52), "生贄洞窟": (59, 8), "須佐沼": (50, 9),
+         "高千穗岳": (27, 26), "山賊洞窟": (44, 46), "伊吹山": (60, 44), "鬼之島": (51, 56),
+         "海賊之島": (80, 6), "血沼": (5, 8), "死靈祭壇": (3, 12), "邪馬": (4, 15),
+         "邪馬神殿": (6, 18)}
 
 FONTS = {
     "ja": "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc",
@@ -126,6 +149,32 @@ def label(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str,
     draw.text((left + 6 - box[0], top + 5 - box[1]), text, font=font, fill=(60, 20, 10))
 
 
+def dashed(draw: ImageDraw.ImageDraw, a: tuple[int, int], b: tuple[int, int],
+           fill, dash: tuple[int, int], width: int = 7) -> None:
+    length = math.dist(a, b)
+    step = sum(dash)
+    for k in range(int(length // step) + 1):
+        t0, t1 = k * step / length, min((k * step + dash[0]) / length, 1)
+        draw.line((a[0] + (b[0] - a[0]) * t0, a[1] + (b[1] - a[1]) * t0,
+                   a[0] + (b[0] - a[0]) * t1, a[1] + (b[1] - a[1]) * t1), fill=fill, width=width)
+
+
+def legend(draw: ImageDraw.ImageDraw, font) -> None:
+    """Key for the route lines, bottom left."""
+    x, y = 30, H * 32 - 170
+    draw.rectangle((x - 14, y - 14, x + 560, y + 136), fill=(20, 30, 50), outline=(255, 255, 255))
+    rows = [((255, 255, 255), None, "可走的路線"),
+            ((255, 255, 255), (18, 12), "事件解決後無法前往"),
+            ((0, 210, 255), (10, 8), "在村內對話前往（搭船，不經大地圖）")]
+    for k, (colour, dash, text) in enumerate(rows):
+        ly = y + 20 + k * 44
+        if dash:
+            dashed(draw, (x, ly), (x + 90, ly), colour, dash)
+        else:
+            draw.line((x, ly, x + 90, ly), fill=colour, width=5)
+        draw.text((x + 110, ly - 17), text, font=font, fill=(255, 255, 255))
+
+
 def villages(amap: bytes, owner: list[int]) -> dict[int, tuple[int, int]]:
     """Pixel centre of each village's gate metatile."""
     return {owner[i]: ((i % W) * 32 + 16, (i // W) * 32 + 16)
@@ -176,17 +225,28 @@ def main() -> None:
             td.line((x, y, x, y + 31), fill=(0, 0, 0, 255), width=3)
         if v >= 0 and (i // W == 0 or owner[i - W] != v):
             td.line((x, y, x + 31, y), fill=(0, 0, 0, 255), width=3)
-    for a, bs in adj.items():
-        for b in bs:
-            if a < b and a in pos and b in pos:
-                td.line(pos[a] + pos[b], fill=(255, 255, 255, 230), width=5)
+    where = {zh[v]: xy for v, xy in pos.items()}
+    where.update({n: (x * 32 + 16, y * 32 + 16) for n, (x, y) in SITES.items()})
+    for route in ROUTES:
+        a, b = route.split("-")
+        td.line(where[a] + where[b], fill=(255, 255, 255, 230), width=5)
+    for routes, colour, dash in ((CLOSED_LATER, (255, 255, 255, 230), (18, 12)),
+                                 (BY_DIALOGUE, (0, 210, 255, 255), (10, 8))):
+        for route in routes:
+            a, b = route.split("-")
+            dashed(td, where[a], where[b], colour, dash)
     im = Image.alpha_composite(base.convert("RGBA"), tint).convert("RGB")
     draw = ImageDraw.Draw(im)
     font = ImageFont.truetype(FONTS["zh"], 26)
-    for v, xy in sorted(pos.items()):
-        draw.ellipse((xy[0] - 8, xy[1] - 8, xy[0] + 8, xy[1] + 8), fill=(255, 255, 255),
-                     outline=(0, 0, 0), width=3)
-        label(draw, xy, zh[v], font)
+    for name, (x, y) in where.items():
+        if name in SITES and name not in ("血沼", "邪馬"):
+            draw.polygon(((x, y - 11), (x + 11, y), (x, y + 11), (x - 11, y)),
+                         fill=(255, 220, 120), outline=(0, 0, 0), width=3)
+        else:
+            draw.ellipse((x - 8, y - 8, x + 8, y + 8), fill=(255, 255, 255),
+                         outline=(0, 0, 0), width=3)
+        label(draw, (x, y), name, font)
+    legend(draw, font)
     im.save(os.path.join(args.out, "territory_zh.png"))
 
     if args.adjacency:

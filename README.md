@@ -24,7 +24,7 @@ game/KAMI/EVENT.DAT
 回寫譯文（`tools/install.py` 與它用到的 `patch.py`／`event.py`／`tables.py`）
 **只用標準庫**，有 `python3` 就能跑，不必建虛擬環境。
 
-圖形工具（`npk.py`／`gfx.py`／`rawgfx.py`／`worldmap.py`／`forcemap.py`／`villagemap.py`／`dungeonmap.py`）需要 pillow：
+圖形工具（`npk.py`／`gfx.py`／`rawgfx.py`／`worldmap.py`／`forcemap.py`／`villagemap.py`／`dungeonmap.py`／`japanmap.py`）需要 pillow：
 
 ```sh
 uv venv
@@ -39,9 +39,10 @@ uv pip install pillow
 | `tools/gfx.py` | 把 NPK016 容器輸出成 PNG |
 | `tools/rawgfx.py` | 渲染未壓縮的 planar 圖形（`FACEGRP.DAT` 等） |
 | `tools/worldmap.py` | 繪製大地圖（日文／中文村名版）、各村領地與相鄰線，並列出相鄰表 |
-| `tools/forcemap.py` | 繪製村莊畫面的勢力地圖，各區塊標上村名（日文／中文） |
+| `tools/forcemap.py` | 繪製村莊畫面的勢力地圖：只上色的一張，以及標上村名的日文、中文各一張 |
 | `tools/villagemap.py` | 繪製 32 張村莊平面圖（標出村長家、倉庫、鍛冶屋、入口等） |
-| `tools/dungeonmap.py` | 繪製 13 座迷宮共 85 層的地圖 |
+| `tools/dungeonmap.py` | 繪製 13 座迷宮共 81 張地圖；`--guide` 另出標上寶箱、樓梯、門、傳送陣與機關的版本，`--list` 列成清單 |
+| `tools/japanmap.py` | 在現代日本地圖上標出遊戲 30 村的對應地點 |
 | `tools/palette.py` | 實測的遊戲色盤（固定 0–7 色＋地圖／村落／洞窟三組 8–15 色） |
 | `tools/sjis_scan.py` | 掃描檔案中的 Shift-JIS 字串 |
 | `tools/text.py` | 抽出可翻譯文字成 TSV（支援 XOR 解碼與區段限定） |

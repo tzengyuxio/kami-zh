@@ -3,7 +3,7 @@
 
     .venv/bin/python tools/forcemap.py build/maps
 
-Writes force_ja.png and force_zh.png: the map background (GRAPH.NPK #3)
+Writes force.png (unlabelled), force_ja.png and force_zh.png: the map background (GRAPH.NPK #3)
 with every territory filled (neighbours never share a colour) and labelled
 in a 16-dot pixel font, then scaled up 4x in total without smoothing. The font is
 DotGothic16 (SIL OFL), fetched once into build/fonts/:
@@ -148,6 +148,8 @@ def main() -> None:
     spots = [centre(x, y, m) for x, y, m in regions]
     font = ImageFont.truetype(FONT, 16)
     base = base.resize((base.width * PRE, base.height * PRE), Image.NEAREST)
+    base.resize((base.width * POST, base.height * POST), Image.NEAREST).save(
+        os.path.join(args.out, "force.png"))
     for lang, label in names.items():
         im = base.copy()
         draw = ImageDraw.Draw(im)
