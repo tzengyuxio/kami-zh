@@ -50,12 +50,16 @@ uv pip install pillow
 | `tools/patch.py` | 把譯文寫回遊戲檔（檢查 JIS 字庫與位元組上限） |
 | `tools/event.py` | 解析／重建 `EVENT.DAT`，支援**變長**譯文 |
 | `tools/jis.py` | 檢查用字是否在 JIS X 0208 內，並給替代建議 |
+| `tools/consistency.py` | 跨檔一致性檢查：繁／日字形混用、同一句日文多種譯法 |
+| `tools/normalize.py` | 就地正規化字形（繁體優先，缺字才用新字體） |
 | `tools/install.py` | 一鍵把 `game/` 修補成 `build/`（跨平台，純標準庫） |
+| `tools/dosbox/run.sh` | 在 DOSBox-X（DOS/V 日文模式）執行 `build/KAMI`，可帶秒數錄影 |
 | `tools/savepatch.py` | 把舊存檔裡的村名、人名更新成目前 build 的譯名（原檔留 `.bak`） |
 | `tools/maxgear.py` | 遊玩輔助：把 build 的 `MAIN.EXE` 中所有武器攻擊、防具防禦設成 255（`install.py` 會還原，需重跑） |
 | `tools/weakfoes.py` | 遊玩輔助：把 build 的 `RPDATA.CIM` 魔物體力、`BPDATA.CIM` 頭目各部位體力設成 10（`install.py` 會還原，需重跑） |
 | `tools/mousetsr.py` | 產生腳本化滑鼠的 DOS TSR，用來自動化選單操作 |
 | `tools/exptsr.py` | 產生熱鍵 TSR：遊戲中按 Ctrl+E，指定人物下次獲得經驗即升級 |
+| `tools/statepeek.py` | 從 DOSBox-X 快照讀出人物等級、經驗與能力值 |
 
 範例：
 
@@ -115,22 +119,17 @@ uv pip install pillow
 
 ## 翻譯與回寫
 
-譯文放在 `translation/`，欄位與 `extracted/text/` 相同。回寫流程：
+譯文放在 `translation/`，欄位與 `extracted/text/` 相同。改完譯文後的檢查與建置：
 
 ```sh
-# 先檢查：譯文是否都在 JIS X 0208 內、是否超出位元組上限
-.venv/bin/python tools/patch.py check --tsv translation/trial_main_ui.tsv
-
-# 套用到 build/（絕不就地改 game/ 的原始檔）
-mkdir -p build/KAMI && cp game/KAMI/* build/KAMI/
-.venv/bin/python tools/patch.py apply --tsv translation/trial_main_ui.tsv \
-    --target game/KAMI/MAIN.EXE --out build/KAMI/MAIN.EXE
-.venv/bin/python tools/patch.py apply --tsv translation/trial_event.tsv \
-    --target game/KAMI/EVENT.DAT --out build/KAMI/EVENT.DAT --xor 0x77
-
-# 在 DOSBox-X 的 DOS/V 日文模式下執行
-dosbox-x -conf tools/dosbox/kami.conf
+python3 tools/event.py verify --tsv translation/event.tsv     # 劇情：缺字、70 bytes 上限、控制碼
+python3 tools/patch.py check --tsv translation/main_ui.tsv    # UI：缺字與 max_bytes
+python3 tools/consistency.py translation/*.tsv                # 跨檔一致性
+python3 tools/install.py                                      # 套用全部譯文到 build/KAMI/
 ```
+
+`install.py` 依檔案類型分派三種回寫方式（UI／片頭／結局就地覆寫、人名與魔物名寫入
+固定長度 record、劇情整檔重建），`game/` 永遠不改。
 
 ### 兩種回寫方式
 
@@ -174,6 +173,18 @@ JIS X 0208 收的是日系字形，繁體常用字會有缺口。試譯時實際
 
 `tools/patch.py check` 會把這類缺字全部列出來。先用它掃過整批譯文，
 再逐條換字或換詞，比一個個撞有效率。
+
+## 打包可直接遊玩的版本
+
+只含中文化、不含任何遊戲修改（保留片頭，魔物數值為原版）：
+
+```sh
+SKIP_OPENING=0 python3 tools/install.py
+```
+
+再把原版 `KAMI/` 資料夾中的 `MAIN.EXE`、`OPEN.EXE`、`END.EXE`、`EVENT.DAT`、
+`SDATA.CIM`、`RPDATA.CIM` 換成 `build/KAMI/` 的版本即可；其餘檔案與 `KAMI.COM` 都不變。
+不要放進 `ENDING.COM`（開發用，只播 ED），也不要先跑 `weakfoes.py`／`maxgear.py`。
 
 ## 在模擬器上執行
 
@@ -256,12 +267,10 @@ ffmpeg -y -i /tmp/k.avi -vf "fps=1" /tmp/frames/k%03d.png
 
 ## 文件
 
-## 文件
-
 - [`docs/formats.md`](docs/formats.md) — 檔案格式分析（含未解項）
 - [`docs/translation-style.md`](docs/translation-style.md) — 翻譯風格指南（語域、缺字處理、專有名詞表）
 - [`docs/glossary-review.md`](docs/glossary-review.md) — 人名譯法審閱清單
-- [`docs/guide/`](docs/guide/README.md) — 遊玩攻略資料（各村、鍛冶、道具、術法、身分）
+- [`docs/guide/`](docs/guide/README.md) — 遊玩攻略資料（地圖與路線、迷宮寶箱、各村、鍛冶、道具、術法、身分）
 
 ## 致謝
 
