@@ -70,8 +70,8 @@ tools/dosbox/run.sh [秒數]
 
 ## 模擬器踩坑
 
-`tools/dosbox/run.sh` 已處理好下列問題，修改時別弄壞：`dosv` 設定屬於 `[dosv]` 區段；A: 必須是 `imgmake` 做的真軟碟映像並放 `BDISK.VER`；不能直接跑 `MAIN.EXE`（需 `KAMI.COM` 安裝 INT 65h，`install.py` 把 `KAMI.COM` 執行 `OPEN.EXE` 的程式碼改成 NOP 來跳過片頭；改字串會讓 `MAIN.EXE` 跑兩次、破關後不播 ED）。遊戲選單是滑鼠驅動的，自動化要用 `tools/mousetsr.py` 產生 `build/FAKEMS.COM`（原理與常用座標見 README）。
+`tools/dosbox/run.sh` 已處理好下列問題，修改時別弄壞：`dosv` 設定屬於 `[dosv]` 區段；A: 必須是 `imgmake` 做的真軟碟映像並放 `BDISK.VER`；不能直接跑 `MAIN.EXE`（需 `KAMI.COM` 安裝 INT 65h，`install.py` 把 `KAMI.COM` 執行 `OPEN.EXE` 的程式碼改成 NOP 來跳過片頭；改字串會讓 `MAIN.EXE` 跑兩次、破關後不播 ED）。遊戲選單是滑鼠驅動的，自動化要用 `tools/mousetsr.py` 產生 `build/FAKEMS.COM`（原理與常用座標見 `docs/development.md`）。
 
 ## 文件同步
 
-翻譯進度表與工具表在 `README.md`，風格規則在 `docs/translation-style.md`；改變進度、新增工具或確立新的用字規則時一併更新。
+翻譯進度表在 `README.md`，工具表與開發流程在 `docs/development.md`，風格規則在 `docs/translation-style.md`；改變進度、新增工具或確立新的用字規則時一併更新。
