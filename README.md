@@ -12,8 +12,6 @@
 放進自備的 DOS/V 原版 `KAMI` 資料夾執行，旁邊會產生中文版 `KAMI_ZH`（原資料夾不動）。
 用 [DOSBox-X](https://dosbox-x.com/) 的 DOS/V 模式遊玩，壓縮檔附有設定檔。
 
-也可以在瀏覽器裡玩（網頁版，見 [`docs/playing.md`](docs/playing.md#網頁版)）。
-
 詳細步驟、DOSBox-X 設定要點見 [`docs/playing.md`](docs/playing.md)。
 
 ## 翻譯進度
