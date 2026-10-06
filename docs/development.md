@@ -52,6 +52,7 @@ uv pip install pillow
 | `tools/dosbox/run.sh` | 在 DOSBox-X（DOS/V 日文模式）執行 `build/KAMI`，可帶秒數錄影 |
 | `tools/mkpatch.py` | 比對原版與中文版，產生發佈用的差異檔（只含譯文） |
 | `tools/release.sh` | 從頭建置乾淨的中文版並編出 Windows／macOS 修補程式（`patcher/`，Go） |
+| `tools/web.sh` | 組出網頁版（`web/`）到 `web/dist/`，`serve` 參數可在本機開伺服器測試 |
 | `tools/savepatch.py` | 把舊存檔裡的村名、人名更新成目前 build 的譯名（原檔留 `.bak`） |
 | `tools/maxgear.py` | 遊玩輔助：把 build 的 `MAIN.EXE` 中所有武器攻擊、防具防禦設成 255（`install.py` 會還原，需重跑） |
 | `tools/weakfoes.py` | 遊玩輔助：把 build 的 `RPDATA.CIM` 魔物體力、`BPDATA.CIM` 頭目各部位體力設成 10（`install.py` 會還原，需重跑） |
@@ -171,6 +172,30 @@ gh release create v1.0.0 patcher/dist/*.zip
 
 修補程式只支援與 `game/KAMI` 相同的原版：會先比對每個檔案的 SHA-256，
 不符就停止。
+
+## 網頁版
+
+```sh
+tools/web.sh          # 組出 web/dist/（index.html、app.js、kami-zh.kzp）
+tools/web.sh serve    # 同上，並在 http://localhost:8000/ 開伺服器
+```
+
+`web/` 是純靜態網頁，沒有建置步驟：js-dos 8.5.1（含 DOSBox-X 的 WebAssembly 版）與 fflate
+從 jsDelivr 載入。玩家選擇自己的原版資料夾或 zip 後，`app.js` 在瀏覽器裡用 `kami-zh.kzp`
+的 SHA-256 驗證、套用差異（與 `patcher/` 相同的格式），打包成 js-dos bundle 再啟動。
+
+- **原版檔**存在瀏覽器的 IndexedDB，修補在每次開始時重做，所以更新 `kami-zh.kzp` 後玩家不必重選檔案。
+- **存檔**：js-dos 把 C: 的變動（`SAVEDATA.DAT`、軟碟映像）以固定的鍵 `kami-zh.changes` 存在瀏覽器。
+  `app.js` 每 3 秒讀一次 `KAMI/SAVEDATA.DAT`，內容變了、且下一次讀到相同（寫完了）就呼叫 js-dos 的 `save()`，
+  所以遊戲內存檔會自動保存。js-dos 的 `fsReadFile` 讀不存在的檔案時不會回傳，要先用 `fsTree` 確認檔案存在。
+- **快照**：DOSBox-X 的狀態快照（js-dos 的 `hand_savestate`／`hand_loadstate` 事件）。`dosbox.conf` 設
+  `savefile = kamistate.sav`、`usesavefile = true`，快照就寫在 bundle 根目錄（約 350 KB），`app.js` 讀出來
+  連同縮圖存進 IndexedDB 的 8 個欄位，另有一格快速快照（F6 存、F7 讀，不經確認；js-dos 自己的 F6／F7 以
+  `quickSave: false` 關掉）。存之前先刪掉舊的快照檔，才分辨得出「寫好了」；讀取時寫回再觸發 `hand_loadstate`。快照不含磁碟，讀快照不影響遊戲內存檔。
+- **字型**：沒有系統字型可借，DOS/V 用的是 DOSBox-X 內建的預設字型，筆畫與桌面版不同。
+- **跳過片頭**用與 `install.py` 相同的 NOP 改法，在瀏覽器裡改 `KAMI.COM`。
+
+`web/dist/` 不進版控，內容只有網頁、程式與差異檔，不含遊戲資料，可以直接放上 GitHub Pages 之類的靜態主機。
 
 ## 在模擬器上執行
 

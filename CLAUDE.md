@@ -68,6 +68,8 @@ tools/dosbox/run.sh [秒數]
 
 `tools/release.sh VERSION` 產生玩家用的修補程式（`patcher/`，Go，內嵌 `mkpatch.py` 做的差異檔），輸出到 `patcher/dist/`。它自己在暫存目錄建置，不含遊戲修改；不要拿 `build/KAMI` 做差異（可能套過 `weakfoes.py`、跳過片頭）。
 
+網頁版在 `web/`（js-dos＋DOSBox-X WASM，玩家在瀏覽器裡選原版檔、套用同一份 `kami-zh.kzp`），`tools/web.sh` 組出 `web/dist/`，細節見 `docs/development.md`。
+
 ## 模擬器踩坑
 
 `tools/dosbox/run.sh` 已處理好下列問題，修改時別弄壞：`dosv` 設定屬於 `[dosv]` 區段；A: 必須是 `imgmake` 做的真軟碟映像並放 `BDISK.VER`；不能直接跑 `MAIN.EXE`（需 `KAMI.COM` 安裝 INT 65h，`install.py` 把 `KAMI.COM` 執行 `OPEN.EXE` 的程式碼改成 NOP 來跳過片頭；改字串會讓 `MAIN.EXE` 跑兩次、破關後不播 ED）。遊戲選單是滑鼠驅動的，自動化要用 `tools/mousetsr.py` 產生 `build/FAKEMS.COM`（原理與常用座標見 `docs/development.md`）。
