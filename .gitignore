@@ -34,3 +34,6 @@ screenshots/
 # Recordings (game footage)
 *.avi
 *.mp4
+
+# Social post images are game screenshots
+social/*.png
