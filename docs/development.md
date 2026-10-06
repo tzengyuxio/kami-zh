@@ -195,6 +195,8 @@ tools/web.sh serve    # 同上，並在 http://localhost:8000/ 開伺服器
 - **字型**：沒有系統字型可借，DOS/V 用的是 DOSBox-X 內建的預設字型，筆畫與桌面版不同。
 - **跳過片頭**用與 `install.py` 相同的 NOP 改法，在瀏覽器裡改 `KAMI.COM`。
 
+移植到其他 KOEI DOS/V 中文化專案時，可沿用的部分與 js-dos 的坑整理在 `docs/web-port.md`。
+
 `web/dist/` 不進版控，內容只有網頁、程式與差異檔，不含遊戲資料，可以直接放上 GitHub Pages 之類的靜態主機。
 
 ## 在模擬器上執行
