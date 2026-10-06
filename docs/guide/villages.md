@@ -85,3 +85,4 @@
 
 - [PC-98 神々の大地～古事記外伝～ プレイレポート① - コーエー レトロゲームの館](https://koeiretro.hatenablog.com/entry/2021/02/20/200000)
 - [【神々の大地 ～古事記外伝～】 ゲーム感想・レビュー 廃虚碑文](https://kiisu.egono.com/main.php?key=kojiki)
+- 埼玉帝国〈第117回：神々の大地 ～古事記外伝～〉[その1](https://saitamat.blog.fc2.com/blog-entry-437.html)、[その2](https://saitamat.blog.fc2.com/blog-entry-438.html)、[その3](https://saitamat.blog.fc2.com/blog-entry-439.html)（內容整理在 [`walkthrough.md`](walkthrough.md)）
