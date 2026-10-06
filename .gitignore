@@ -35,5 +35,5 @@ screenshots/
 *.avi
 *.mp4
 
-# Social post images are game screenshots
-social/*.png
+# Social posts and their images stay local
+social/
