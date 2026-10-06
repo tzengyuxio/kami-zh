@@ -48,7 +48,7 @@ tools/release.sh v1.0.0    # 編出玩家用的修補程式
 - [`docs/formats.md`](docs/formats.md) — 檔案格式分析（含未解項）
 - [`docs/translation-style.md`](docs/translation-style.md) — 翻譯風格指南（語域、缺字處理、專有名詞表）
 - [`docs/glossary-review.md`](docs/glossary-review.md) — 人名譯法審閱清單
-- [`docs/guide/`](docs/guide/README.md) — 遊玩攻略資料（地圖與路線、迷宮寶箱、各村、鍛冶、道具、術法、身分）
+- [`docs/guide/`](docs/guide/README.md) — 遊玩攻略資料（地圖與路線、迷宮寶箱、各村、鍛冶、道具、術法、身分、人物）
 
 ## 致謝
 

@@ -12,9 +12,10 @@
 - [`items.md`](items.md)：道具表（武器、防具、飾品、消耗品、原料）
 - [`spells.md`](spells.md)：術法表（氣力、威力、對象）與魔物招式
 - [`jobs.md`](jobs.md)：身分（職業）與開局人物
+- [`people.md`](people.md)：人物表（148 人的出處、身分、開局等級與能力，以及各村的長）
 - [`orochi.md`](orochi.md)：八岐大蛇的準備流程與打法
 
-`items.md`、`spells.md`、`jobs.md` 的表格是從 `build/` 已中文化的資料產生的。
+`items.md`、`spells.md`、`jobs.md`、`people.md` 的表格是從 `build/` 已中文化的資料產生的。
 
 ## 基本資訊
 
