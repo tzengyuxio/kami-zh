@@ -8,7 +8,9 @@
 
 1. 把 `kami-zh-patch` 放進 `KAMI` 資料夾（或旁邊）執行，也可以把 `KAMI` 資料夾拖到程式上。
 2. 程式會在旁邊建立 `KAMI_ZH`，裡面就是中文版；原本的 `KAMI` 不會被修改。
-   檔案與支援的原版不符（其他版本或已修改過）時會直接停止，不寫入任何東西。
+   寫入前會先檢查所有檔案，一次列出不符的檔案與原因（其他版本、已修改過，或從磁片複製時就已損毀）。
+   `MAIN.EXE`、`EVENT.DAT` 不符時直接停止；`END.EXE`、`OPEN.EXE`、`SDATA.CIM`、`RPDATA.CIM` 不符時
+   可以選擇跳過，其他檔案照常中文化，跳過的檔案原樣複製。
 
 Windows 首次執行若出現 SmartScreen 警告，按「其他資訊」→「仍要執行」；macOS 若被擋，
 先執行 `xattr -d com.apple.quarantine kami-zh-patch`。

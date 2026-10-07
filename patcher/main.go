@@ -29,6 +29,19 @@ var patchData []byte
 
 const outName = "KAMI_ZH"
 
+// skippable lists the patched files the game can do without: each is used
+// on its own, so a damaged or different copy can be left as it is and the
+// rest still translated. MAIN.EXE and EVENT.DAT are not here -- EVENT.DAT's
+// block index lives in MAIN.EXE, so neither works without the other.
+var skippable = map[string]string{
+	"END.EXE":    "結局會維持原檔的狀態（日文；若檔案損毀，破關後的結局也無法正常播放）",
+	"OPEN.EXE":   "片頭會維持日文",
+	"SDATA.CIM":  "人名與村名會維持日文",
+	"RPDATA.CIM": "魔物名會維持日文",
+}
+
+var stdin = bufio.NewReader(os.Stdin)
+
 type filePatch struct {
 	name             string
 	srcSize, dstSize uint32
@@ -94,6 +107,32 @@ func (f filePatch) apply(src []byte) []byte {
 	return out
 }
 
+// diagnose explains why a file does not match the supported original.
+func diagnose(src []byte, f filePatch) string {
+	if uint32(len(src)) != f.srcSize {
+		return fmt.Sprintf("大小是 %d bytes，原版是 %d bytes，可能是其他版本或已被修改", len(src), f.srcSize)
+	}
+	// Floppies are formatted with 0xF6; a copy that failed to read some
+	// sectors keeps that filler. (Runs of 0x00 prove nothing: MAIN.EXE
+	// legitimately ends in several KB of them.)
+	n := 0
+	for n < len(src) && src[len(src)-1-n] == 0xF6 {
+		n++
+	}
+	if n >= 512 {
+		return fmt.Sprintf("檔案已損毀：結尾 %d bytes 全是 0xF6（磁片讀取不完整時留下的格式化填充值）。"+
+			"請從原版磁片重新複製這個檔案", n)
+	}
+	return "大小相同但內容不同，可能是其他版本或已被修改"
+}
+
+func ask(question string) bool {
+	fmt.Print(question, " (y/N) ")
+	line, _ := stdin.ReadString('\n')
+	line = strings.TrimSpace(strings.ToLower(line))
+	return line == "y" || line == "yes"
+}
+
 // findFile matches a name case-insensitively, as DOS file names are.
 func findFile(dir, name string) (string, bool) {
 	entries, err := os.ReadDir(dir)
@@ -141,12 +180,16 @@ func run(args []string) error {
 	}
 	fmt.Println("遊戲資料夾：", game)
 
-	// Check every file before writing anything.
+	// Check every file before writing anything, and report all problems
+	// at once rather than stopping at the first.
 	sources := map[string][]byte{}
+	var bad, fatal []string
+	done := 0
 	for _, f := range files {
 		path, ok := findFile(game, f.name)
 		if !ok {
-			return fmt.Errorf("缺少 %s", f.name)
+			fatal = append(fatal, fmt.Sprintf("缺少 %s", f.name))
+			continue
 		}
 		src, err := os.ReadFile(path)
 		if err != nil {
@@ -156,10 +199,34 @@ func run(args []string) error {
 		case f.srcSum:
 			sources[f.name] = src
 		case f.dstSum:
-			return fmt.Errorf("%s 已經是中文版，不需要再修補", f.name)
+			done++
+			fatal = append(fatal, fmt.Sprintf("%s 已經是中文版，不需要再修補", f.name))
 		default:
-			return fmt.Errorf("%s 與支援的原版不同（可能是其他版本或已被修改），無法修補", f.name)
+			msg := fmt.Sprintf("%s：%s", f.name, diagnose(src, f))
+			if _, ok := skippable[f.name]; ok {
+				bad = append(bad, f.name)
+				fmt.Println("  ", msg)
+			} else {
+				fatal = append(fatal, msg)
+			}
 		}
+	}
+	if done == len(files) {
+		return errors.New("這個資料夾已經是中文版，不需要再修補")
+	}
+	if len(fatal) > 0 {
+		return errors.New(strings.Join(fatal, "\n") + "\n以上檔案無法修補，沒有寫入任何東西。")
+	}
+	if len(bad) > 0 {
+		fmt.Println()
+		fmt.Println("以上檔案可以跳過，其他檔案照常中文化。跳過的檔案會原樣複製：")
+		for _, name := range bad {
+			fmt.Printf("   %s：%s\n", name, skippable[name])
+		}
+		if !ask("要跳過這些檔案繼續嗎？") {
+			return errors.New("已取消，沒有寫入任何東西")
+		}
+		fmt.Println()
 	}
 
 	out := filepath.Join(filepath.Dir(game), outName)
@@ -191,6 +258,10 @@ func run(args []string) error {
 		}
 	}
 	for _, f := range files {
+		if sources[f.name] == nil {
+			fmt.Printf("  已跳過 %s（原樣複製）\n", f.name)
+			continue
+		}
 		dst := f.apply(sources[f.name])
 		if sha256.Sum256(dst) != f.dstSum {
 			return fmt.Errorf("%s 修補結果不正確", f.name)
@@ -203,6 +274,9 @@ func run(args []string) error {
 	}
 	fmt.Println("完成！中文版在：", out)
 	fmt.Println("原本的資料夾沒有任何變動。")
+	if len(bad) > 0 {
+		fmt.Printf("跳過的檔案：%s。換成完好的原版檔後重新執行，就能完整中文化。\n", strings.Join(bad, "、"))
+	}
 	return nil
 }
 
@@ -216,7 +290,7 @@ func main() {
 	}
 	fmt.Println()
 	fmt.Print("按 Enter 結束…")
-	bufio.NewReader(os.Stdin).ReadString('\n')
+	stdin.ReadString('\n')
 	if err != nil {
 		os.Exit(1)
 	}

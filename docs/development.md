@@ -170,8 +170,13 @@ gh release create v1.0.0 patcher/dist/*.zip
 `patcher/kami-zh.kzp`，再交叉編譯 `patcher/`（差異檔內嵌進執行檔），輸出到
 `patcher/dist/`。差異檔與執行檔都不進版控。
 
-修補程式只支援與 `game/KAMI` 相同的原版：會先比對每個檔案的 SHA-256，
-不符就停止。
+修補程式只支援與 `game/KAMI` 相同的原版：寫入前比對每個檔案的 SHA-256，一次列出所有不符的檔案與原因
+（大小不同；結尾 512 bytes 以上全是 `0xF6`＝從磁片複製時有磁區沒讀到；其他差異）。`MAIN.EXE`、`EVENT.DAT`
+互相依賴（劇情的 block 索引在 `MAIN.EXE`），不符就停止；`END.EXE`、`OPEN.EXE`、`SDATA.CIM`、`RPDATA.CIM`
+各自獨立，不符時可讓玩家選擇跳過、原樣複製（`main.go` 的 `skippable`）。
+
+實例：有玩家的 `END.EXE` 大小、日期都對，但 `0xD000` 之後 5,057 bytes 全是 `0xF6`（結局文字所在），
+是磁片複製失敗的壞檔，不是另一個版本。這種檔案無法從差異檔補回（差異檔不帶原版資料），只能換完好的檔案。
 
 ## 網頁版
 
