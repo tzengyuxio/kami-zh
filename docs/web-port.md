@@ -106,11 +106,28 @@ js-dos 的行為與踩過的坑、驗證方法。kami-zh 自己的實作細節�
 - 第一次啟動、還沒有存檔時，自動化瀏覽器裡遊戲曾自己點進「開始新遊戲」與取名確認；有存檔後沒再出現。
   移植時用一般瀏覽器確認一次。
 
-## 多款遊戲怎麼放（待決定）
+## 多款遊戲怎麼放（2026-10-09 決議）
 
-1. **各 repo 各自一份 `web/`**：每個專案獨立部署（例如 `tzengyuxio.github.io/<repo>/`），
-   複製 `app.js` 改參數。最簡單、互不影響；缺點是同一個修正要改三份。
-2. **單一網頁 repo，吃各專案的差異檔**：播放器程式只有一份，由每款遊戲的 manifest（上表的參數）驅動，
-   首頁選遊戲。差異檔在建置網站時從各專案的 release 取得（GitHub release 的下載網址沒有 CORS，
-   不能在瀏覽器裡直接抓），各專案的 release 流程要多產出 manifest 與 `.kzp`。
-   同一網域下 IndexedDB 與 `fsChanges` 鍵要依遊戲區分。
+**單一網頁 repo，吃各專案的差異檔。** 原本的選項「各 repo 各自一份 `web/`」已放棄：三份 `app.js` 各約 500 行，
+彼此有 140–180 行不同，已經開始各自分歧，同一個修正要改三次。
+
+- **網站定位**：方便遊玩「中文化過的 DOS 遊戲」的地方，不限光榮，但也不是一般的 DOS 線上遊玩站。
+  收錄條件就是這套模式能成立：玩家自備原版檔、網站只提供中文化差異檔。
+- **網頁 repo `dosgame-zh`**（放 Forgejo）：共用的播放器（js-dos 啟動、選原版檔、套用差異檔、自動保存、快照與 F6/F7）、
+  首頁選遊戲，以及每款遊戲的 manifest（上表的參數）與 `.kzp`。
+- **各翻譯 repo**：只產出 `.kzp`（沿用 `mkpatch.py`），不再放網頁程式。建置需要原版遊戲檔，所以 `.kzp` 在本機做好，
+  再 commit 進網頁 repo 或附在 release 上（GitHub release 的下載網址沒有 CORS，不能在瀏覽器裡直接抓）。
+  `.kzp` 只含譯文 bytes，修補程式本來就公開發佈它。
+- **IndexedDB 與 `fsChanges` 鍵依遊戲區分**：三款遊戲在同一網域下。
+- **搬遷順序**：以 kami-zh 的 `web/` 為基礎，把三份的差異抽成 manifest，依序接上 genpei-zh、winning-post-zh，
+  每接一款都用一般瀏覽器實際跑一次；三款都能跑之後，再刪除各 repo 的 `web/`，只留產生 `.kzp` 的步驟。
+
+**部署**：自己的 VPS，不用 GitHub Pages。
+
+- repo 在 Forgejo，GitHub Pages 得另外鏡像到 GitHub。
+- 網站是純靜態：Forgejo Actions 建置後 rsync 到 VPS，由 Caddy 之類的伺服器提供。
+- 用自己的網域（子網域待定，可能掛在 `simagame.me` 底下，`cdosgame.simagame.me` 已在那裡）。網域一開始就要定好：IndexedDB 依網域區分，換網域等於讓玩家的原版檔與快照全部重來。
+- 流量很小：js-dos 的 wasm 從 jsDelivr 載入，網站本身只提供頁面與 `.kzp`。
+
+另一個網站 `koei-kao`（光榮臉譜工具，由大眾臉探索器擴大而成）也採同樣的分工，見 genpei-zh
+`docs/backlog/mob-kao-explorer-integration.md`。
