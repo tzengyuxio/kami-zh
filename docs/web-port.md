@@ -129,5 +129,5 @@ js-dos 的行為與踩過的坑、驗證方法。kami-zh 自己的實作細節�
 - 用自己的網域（子網域待定，可能掛在 `simagame.me` 底下，`cdosgame.simagame.me` 已在那裡）。網域一開始就要定好：IndexedDB 依網域區分，換網域等於讓玩家的原版檔與快照全部重來。
 - 流量很小：js-dos 的 wasm 從 jsDelivr 載入，網站本身只提供頁面與 `.kzp`。
 
-另一個網站 `koei-kao`（光榮臉譜工具，由大眾臉探索器擴大而成）也採同樣的分工，見 genpei-zh
+另一個網站 `kaodata`（光榮臉譜工具，由大眾臉探索器擴大而成）也採同樣的分工，見 genpei-zh
 `docs/backlog/mob-kao-explorer-integration.md`。
